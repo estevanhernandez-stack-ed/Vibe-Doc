@@ -65,6 +65,10 @@ export function listTemplates(): string[] {
     'deployment-procedure',
     'test-plan',
     'data-model',
+    'readme',
+    'install-guide',
+    'skill-command-reference',
+    'changelog-contributing',
   ];
 
   return templates;

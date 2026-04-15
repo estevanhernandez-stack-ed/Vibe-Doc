@@ -19,16 +19,23 @@ export interface Signal {
 export function extractSignals(inventory: ArtifactInventory): Signal[] {
   const signals: Signal[] = [];
 
+  // Normalize paths to forward slashes before any substring matching —
+  // otherwise Windows backslash paths break signal detection for anything
+  // that looks across path components (.github/workflows, .claude-plugin/...)
+  const norm = (s: string) => s.replace(/\\/g, '/').toLowerCase();
+
   // Source code patterns
-  const sourceFiles = inventory.categories.sourceCode.files.join('|').toLowerCase();
-  const configFiles = inventory.categories.configuration.files.join('|').toLowerCase();
-  const infraFiles = inventory.categories.infrastructure.files.join('|').toLowerCase();
-  const docFiles = inventory.categories.documentation.files.join('|').toLowerCase();
-  const allFiles = inventory.categories.sourceCode.files
-    .concat(inventory.categories.configuration.files)
-    .concat(inventory.categories.infrastructure.files)
-    .join('|')
-    .toLowerCase();
+  const sourceFiles = norm(inventory.categories.sourceCode.files.join('|'));
+  const configFiles = norm(inventory.categories.configuration.files.join('|'));
+  const infraFiles = norm(inventory.categories.infrastructure.files.join('|'));
+  const docFiles = norm(inventory.categories.documentation.files.join('|'));
+  const allFiles = norm(
+    inventory.categories.sourceCode.files
+      .concat(inventory.categories.configuration.files)
+      .concat(inventory.categories.infrastructure.files)
+      .concat(inventory.categories.documentation.files)
+      .join('|')
+  );
 
   // Express/Fastify/Koa routes
   if (sourceFiles.includes('routes') || sourceFiles.includes('controller')) {
@@ -363,6 +370,49 @@ export function extractSignals(inventory: ArtifactInventory): Signal[] {
       name: 'has-github-actions',
       source: 'file-scanner',
       weight: 1,
+    });
+  }
+
+  // Claude Code Plugin manifest — the dominant signal for plugin repos.
+  // Path-anchored to avoid false positives on stray files named plugin.json.
+  if (
+    configFiles.includes('.claude-plugin/plugin.json') ||
+    allFiles.includes('.claude-plugin/plugin.json')
+  ) {
+    signals.push({
+      name: 'has-claude-plugin-manifest',
+      source: 'file-scanner',
+      weight: 10,
+    });
+  }
+
+  // Claude Code marketplace manifest (multi-plugin repo)
+  if (
+    configFiles.includes('.claude-plugin/marketplace.json') ||
+    allFiles.includes('.claude-plugin/marketplace.json')
+  ) {
+    signals.push({
+      name: 'has-claude-marketplace',
+      source: 'file-scanner',
+      weight: 8,
+    });
+  }
+
+  // SKILL.md files under a skills/ directory (plugin skill surface)
+  if (docFiles.match(/\/skills\/[^/|]+\/skill\.md/)) {
+    signals.push({
+      name: 'has-claude-skill-files',
+      source: 'file-scanner',
+      weight: 6,
+    });
+  }
+
+  // Command markdown files under a commands/ directory
+  if (docFiles.match(/\/commands\/[^/|]+\.md/)) {
+    signals.push({
+      name: 'has-claude-command-files',
+      source: 'file-scanner',
+      weight: 5,
     });
   }
 

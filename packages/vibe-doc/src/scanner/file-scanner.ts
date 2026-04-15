@@ -25,6 +25,11 @@ const EXCLUDE_DIRS = new Set([
 function categorizeFile(filePath: string): keyof FileScanResult {
   const n = filePath.replace(/\\/g, '/');
   if (n.endsWith('CLAUDE.md')) return 'configAsDocs';
+  // Claude Code plugin manifests (plugin.json, marketplace.json inside .claude-plugin/)
+  if (n.includes('/.claude-plugin/') && n.endsWith('.json')) return 'packageConfigs';
+  // SKILL.md files and command docs are plugin surface area
+  if (n.match(/\/skills\/[^/]+\/SKILL\.md$/i)) return 'documentation';
+  if (n.match(/\/commands\/[^/]+\.md$/i)) return 'documentation';
   if (n.includes('/.ai/') || n.includes('/.agent/skills/')) return 'agentArtifacts';
   if (n.includes('/.claude/')) return 'sessionContext';
   if (n.includes('/docs/') && n.endsWith('.md')) return 'documentation';
@@ -36,7 +41,7 @@ function categorizeFile(filePath: string): keyof FileScanResult {
   return 'sourceCode';
 }
 
-function walkDir(dir: string, maxDepth: number = 4, currentDepth: number = 0): string[] {
+function walkDir(dir: string, maxDepth: number = 6, currentDepth: number = 0): string[] {
   const files: string[] = [];
   if (currentDepth > maxDepth) return files;
 
@@ -44,7 +49,7 @@ function walkDir(dir: string, maxDepth: number = 4, currentDepth: number = 0): s
     const entries = fs.readdirSync(dir, { withFileTypes: true });
     for (const entry of entries) {
       if (EXCLUDE_DIRS.has(entry.name)) continue;
-      if (entry.name.startsWith('.') && entry.name !== '.ai' && entry.name !== '.agent' && entry.name !== '.claude' && entry.name !== '.github') continue;
+      if (entry.name.startsWith('.') && entry.name !== '.ai' && entry.name !== '.agent' && entry.name !== '.claude' && entry.name !== '.claude-plugin' && entry.name !== '.github') continue;
       
       const fullPath = path.join(dir, entry.name);
       if (entry.isFile()) {

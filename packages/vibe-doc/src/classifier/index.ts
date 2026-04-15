@@ -157,11 +157,15 @@ function mapCategoryToDeploymentContext(
   const result: DeploymentContext[] = [];
 
   // Determine platform based on category
+  // TODO: these platform/environment/scale strings are untyped magic strings —
+  // worth promoting to enums when the classifier gets its next overhaul.
   let platform = 'cloud';
   if (category === Category.MobileApplication) {
     platform = 'mobile';
   } else if (category === Category.InfrastructurePlatform) {
     platform = 'kubernetes';
+  } else if (category === Category.ClaudeCodePlugin) {
+    platform = 'plugin';
   }
 
   // Check for EdgeEmbedded context
@@ -173,6 +177,10 @@ function mapCategoryToDeploymentContext(
   let environment = 'production';
   if (contexts.includes(Context.InternalTooling)) {
     environment = 'staging';
+  }
+  if (category === Category.ClaudeCodePlugin) {
+    // Plugins are distributed, not deployed in the SaaS sense
+    environment = 'distribution';
   }
 
   // Determine scale based on contexts

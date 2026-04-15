@@ -45,6 +45,7 @@ Choose ONE primary category that best describes this project:
 - **MobileApplication**: Native or cross-platform mobile apps
 - **AIMLSystem**: ML/AI-focused projects with models, training, inference
 - **IntegrationConnector**: Adapters, SDKs, connectors for third-party services
+- **ClaudeCodePlugin**: A Claude Code plugin or plugin marketplace — characterized by a .claude-plugin/plugin.json manifest, skills/*/SKILL.md files, commands/*.md files, or a .claude-plugin/marketplace.json. No runtime deployment in the traditional sense; distributed to users via npm or a marketplace.
 
 ## Operational Contexts
 

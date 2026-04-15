@@ -14,6 +14,7 @@ export enum Category {
   MobileApplication = 'MobileApplication',
   AIMLSystem = 'AIMLSystem',
   IntegrationConnector = 'IntegrationConnector',
+  ClaudeCodePlugin = 'ClaudeCodePlugin',
 }
 
 export enum Context {
@@ -208,6 +209,25 @@ export function scoreClassification(
 
       case 'has-github-actions':
         contextScores[Context.InternalTooling] += 1 * w;
+        break;
+
+      // Claude Code Plugin signals
+      // Weighted to dominate: plugin.json is an unambiguous marker that
+      // overrides any incidental web/framework signals in the repo.
+      case 'has-claude-plugin-manifest':
+        categoryScores[Category.ClaudeCodePlugin] += 20 * w;
+        break;
+
+      case 'has-claude-skill-files':
+        categoryScores[Category.ClaudeCodePlugin] += 8 * w;
+        break;
+
+      case 'has-claude-command-files':
+        categoryScores[Category.ClaudeCodePlugin] += 6 * w;
+        break;
+
+      case 'has-claude-marketplace':
+        categoryScores[Category.ClaudeCodePlugin] += 10 * w;
         break;
 
       default:

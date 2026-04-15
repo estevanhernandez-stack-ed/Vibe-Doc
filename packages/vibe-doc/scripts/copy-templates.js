@@ -12,7 +12,10 @@ async function copyTemplates() {
     fs.mkdirSync(distDir, { recursive: true });
 
     // Read all .md files from src/templates/embedded/
-    const templateFiles = await glob(path.join(srcDir, '*.md'));
+    // fast-glob requires forward slashes on all platforms, so normalize
+    // from any native path form before passing to the matcher.
+    const globPattern = path.join(srcDir, '*.md').replace(/\\/g, '/');
+    const templateFiles = await glob(globPattern);
 
     if (templateFiles.length === 0) {
       console.log('No template files found to copy.');

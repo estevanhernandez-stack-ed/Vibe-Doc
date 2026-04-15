@@ -1,12 +1,12 @@
 # Classification Taxonomy
 
-Reference for Vibe Doc agents. Defines the 7 primary categories and 5 deployment contexts.
+Reference for Vibe Doc agents. Defines the 8 primary categories and 5 deployment contexts.
 
 **Used by:** Scan skill (classification step), Generate skill (doc type selection).
 
 ---
 
-## Primary Categories (7)
+## Primary Categories (8)
 
 ### 1. Web Application
 
@@ -232,6 +232,49 @@ Reference for Vibe Doc agents. Defines the 7 primary categories and 5 deployment
 
 ---
 
+### 8. Claude Code Plugin
+
+**Definition:** A Claude Code plugin or plugin marketplace — distributed to users rather than deployed to production infrastructure. Composed of skill files, slash command definitions, and an optional CLI. Runs inside a coding agent, not on a server.
+
+**Signals:**
+- `.claude-plugin/plugin.json` manifest (strongest signal — overrides any incidental web-framework signals)
+- `.claude-plugin/marketplace.json` for multi-plugin repos
+- `skills/<skill-name>/SKILL.md` files defining agent behaviors
+- `commands/<command>.md` files defining slash commands
+- A CLI entry point (`bin` field in `package.json`) distributed via npm, frequently scoped
+- No runtime deployment target — the "deployment" is a user installing the plugin
+
+**Examples:**
+- `@esthernandez/app-project-readiness` — spec-driven development plugin
+- `@esthernandez/vibe-doc` — documentation gap analyzer plugin
+- Claude Code marketplace entries
+
+**Documentation focus:**
+- What the plugin does and who it's for (README)
+- How a user installs it (install guide, multiple paths: npm, marketplace, local)
+- What skills and slash commands it exposes (skill/command reference)
+- How users can contribute or track changes (changelog + contributing)
+
+**Required doc types:**
+- README (what-it-is, install, quick example, license)
+- Install Guide (prerequisites, install paths, verification, troubleshooting)
+- Skill/Command Reference (per-skill + per-command reference with examples)
+
+**Recommended doc types:**
+- Architecture Decision Records (why the plugin is structured the way it is)
+- Changelog + Contributing (Keep-a-Changelog + contributor onboarding)
+- Test Plan (if the plugin has meaningful behavior to verify)
+
+**Optional (not typically needed):**
+- Runbook, API Specification, Deployment Procedure, Threat Model, Data Model — these are for systems with runtime/deployment/data concerns. Elevate to Recommended or Required only if the plugin reads/writes local files, stores user data, or has a non-trivial security surface (e.g., memory persistence, network calls to external services).
+
+**Notes:**
+- Plugins bundle neither a server nor a database, so traditional ops docs don't apply.
+- The Skill/Command Reference is the plugin equivalent of an API spec — it's how users understand the interface they're consuming.
+- If a plugin persists data (e.g., a user profile at `~/.claude/profiles/builder.json`), the Threat Model becomes Recommended: document what's stored, where, and how users can inspect/delete it.
+
+---
+
 ## Deployment Contexts (5)
 
 Modifiers that adjust Required/Recommended tiers for doc types.
@@ -345,4 +388,4 @@ The answer to question 1 determines primary category. Questions 2-3 determine de
 
 ---
 
-**Last updated:** 2026-04-11 | **Reference version:** 1.0
+**Last updated:** 2026-04-15 | **Reference version:** 1.1

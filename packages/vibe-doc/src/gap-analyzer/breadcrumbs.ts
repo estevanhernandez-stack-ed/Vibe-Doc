@@ -311,6 +311,87 @@ export function getBreadcrumbs(docType: string): Breadcrumb {
         'What indexing strategy do you use?',
       ],
     },
+
+    readme: {
+      docType: 'readme',
+      keywords: ['readme'],
+      filePatterns: ['**/README.md', '**/README', '**/README.*'],
+      gitPatterns: ['readme:', 'docs: readme', 'docs:readme'],
+      codePatterns: [],
+      // Single-file docs: presence of the file is the satisfaction signal.
+      // The generate-time template enforces the sections; the gap analyzer
+      // only needs to know "does a README exist anywhere?"
+      requiredSections: ['present'],
+      gapQuestions: [
+        'What does your project actually do, in one sentence?',
+        'How does a new user install and run it for the first time?',
+        'What does a minimal working example look like?',
+        'Where should someone go next after reading the README?',
+      ],
+    },
+
+    'install-guide': {
+      docType: 'install-guide',
+      keywords: ['install', 'setup', 'getting-started'],
+      filePatterns: [
+        '**/INSTALL.md',
+        '**/INSTALLATION.md',
+        '**/docs/install*',
+        '**/docs/setup*',
+        '**/docs/getting-started*',
+      ],
+      gitPatterns: ['install:', 'setup:', 'docs: install'],
+      codePatterns: [],
+      requiredSections: ['present'],
+      gapQuestions: [
+        'What does a user need before installing (OS, runtimes, accounts)?',
+        'What is the exact command or set of steps to install?',
+        'How does a user verify the install worked?',
+        'What are the most common installation problems and fixes?',
+      ],
+    },
+
+    'skill-command-reference': {
+      docType: 'skill-command-reference',
+      keywords: ['skill', 'command'],
+      filePatterns: [
+        '**/SKILL.md',
+        '**/skills/**',
+        '**/commands/**',
+        '**/docs/commands*',
+        '**/docs/skills*',
+      ],
+      gitPatterns: ['skill:', 'command:', 'docs: skill'],
+      codePatterns: ['SKILL.md', 'description:', 'commands/'],
+      requiredSections: ['present'],
+      gapQuestions: [
+        'What skills or slash commands does this plugin expose?',
+        'For each, what does it do and when should someone reach for it?',
+        'What arguments or inputs does each command accept?',
+        'What does typical output look like?',
+      ],
+    },
+
+    'changelog-contributing': {
+      docType: 'changelog-contributing',
+      keywords: ['changelog', 'contributing', 'history'],
+      filePatterns: [
+        '**/CHANGELOG.md',
+        '**/CONTRIBUTING.md',
+        '**/HISTORY.md',
+        '**/docs/releases*',
+        '**/docs/contributing*',
+      ],
+      gitPatterns: ['release:', 'changelog:', 'docs: changelog'],
+      codePatterns: [],
+      requiredSections: ['present'],
+      gapQuestions: [
+        'Where do you track notable changes between releases?',
+        'How should a contributor get set up and propose changes?',
+        'What is the review and merge process?',
+        'Is there a code of conduct for contributors?',
+      ],
+    },
   };
 
   const breadcrumb = breadcrumbs[docType];

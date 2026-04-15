@@ -105,20 +105,34 @@ function searchForDocumentationEvidence(
 
 /**
  * Simple glob pattern matcher
+ * Normalizes Windows backslashes to forward slashes so glob patterns
+ * that reference path segments (e.g., "** /docs/adr/**") work cross-platform.
  */
 function matchPattern(filePath: string, pattern: string): boolean {
   const regex = patternToRegex(pattern);
-  return regex.test(filePath.toLowerCase());
+  const normalized = filePath.replace(/\\/g, '/').toLowerCase();
+  return regex.test(normalized);
 }
 
 /**
  * Convert glob pattern to regex
+ *
+ * Uses a placeholder for `**` to prevent the subsequent `*` → `[^/]*`
+ * replacement from clobbering the `*` inside `.*`. A naive two-pass
+ * replacement silently produced `.[^/]*` for every `**` pattern,
+ * which broke glob matching for every doc type.
  */
 function patternToRegex(pattern: string): RegExp {
+  // Escape regex-special characters first
   const escaped = pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&');
+
+  // Use a placeholder token that can't appear in a normal path
+  const DOUBLE_STAR = '\u0000DOUBLESTAR\u0000';
+
   const globRegex = escaped
-    .replace(/\*\*/g, '.*')
+    .replace(/\*\*/g, DOUBLE_STAR)
     .replace(/\*/g, '[^/]*')
+    .replace(new RegExp(DOUBLE_STAR, 'g'), '.*')
     .replace(/\?/g, '.');
 
   return new RegExp(`^${globRegex}$`, 'i');

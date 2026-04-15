@@ -6,19 +6,37 @@ Reference for agents. Maps (Primary Category × Deployment Context) to doc type 
 
 ---
 
-## Core Matrix (7×7)
+## Ops-Focused Matrix (8×7)
 
-Primary Categories × 7 Document Types. Base tier before deployment context modifiers.
+Primary Categories × the original 7 operational document types. Base tier before deployment context modifiers.
 
-| Category | Threat Model | ADRs | Runbook | API Spec | Deployment Proc | Test Plan | Data Model |
-|----------|--------------|------|---------|----------|-----------------|-----------|------------|
-| **Web App** | Required | Required | Required | Recommended | Recommended | Recommended | Recommended |
-| **API/Microservice** | Required | Required | Required | Required | Recommended | Recommended | Recommended |
-| **Data Pipeline** | Recommended | Required | Required | Optional | Recommended | Recommended | Required |
-| **Infrastructure/Platform** | Required | Required | Required | Recommended | Required | Recommended | Recommended |
-| **Mobile App** | Recommended | Required | Recommended | Recommended | Required | Required | Recommended |
-| **AI/ML System** | Recommended | Required | Required | Recommended | Required | Required | Required |
-| **Integration/Connector** | Recommended | Recommended | Recommended | Recommended | Optional | Optional | Recommended |
+| Category                    | Threat Model | ADRs        | Runbook     | API Spec    | Deployment Proc | Test Plan   | Data Model  |
+| --------------------------- | ------------ | ----------- | ----------- | ----------- | --------------- | ----------- | ----------- |
+| **Web App**                 | Recommended  | Recommended | Required    | Required    | Required        | Recommended | Required    |
+| **API/Microservice**        | Required     | Recommended | Required    | Required    | Required        | Recommended | Recommended |
+| **Data Pipeline**           | Recommended  | Recommended | Required    | Optional    | Required        | Required    | Required    |
+| **Infrastructure/Platform** | Recommended  | Recommended | Required    | Optional    | Required        | Recommended | Optional    |
+| **Mobile App**              | Required     | Recommended | Required    | Recommended | Required        | Required    | Recommended |
+| **AI/ML System**            | Required     | Recommended | Required    | Recommended | Required        | Required    | Required    |
+| **Integration/Connector**   | Recommended  | Recommended | Recommended | Required    | Recommended     | Recommended | Optional    |
+| **Claude Code Plugin**      | Optional     | Recommended | Optional    | Optional    | Optional        | Recommended | Optional    |
+
+*Note: Table values above reflect the `BASE_MATRIX` in `packages/vibe-doc/src/gap-analyzer/matrix.ts` — source of truth is the code, this table is the human-readable mirror.*
+
+## Plugin-Focused Matrix (8×4)
+
+The same 8 categories × 4 plugin-oriented document types introduced in v0.2.2. These cover the "what-is-this-tool and how-do-I-use-it" docs that matter for distributed plugins and CLIs.
+
+| Category                    | README      | Install Guide | Skill/Command Ref | Changelog/Contributing |
+| --------------------------- | ----------- | ------------- | ----------------- | ---------------------- |
+| **Web App**                 | Required    | Recommended   | Optional          | Recommended            |
+| **API/Microservice**        | Required    | Recommended   | Optional          | Recommended            |
+| **Data Pipeline**           | Required    | Recommended   | Optional          | Recommended            |
+| **Infrastructure/Platform** | Required    | Required      | Optional          | Recommended            |
+| **Mobile App**              | Required    | Required      | Optional          | Recommended            |
+| **AI/ML System**            | Required    | Recommended   | Optional          | Recommended            |
+| **Integration/Connector**   | Required    | Required      | Recommended       | Recommended            |
+| **Claude Code Plugin**      | Required    | Required      | Required          | Recommended            |
 
 ---
 
@@ -181,6 +199,29 @@ Primary Categories × 7 Document Types. Base tier before deployment context modi
 
 ---
 
+### Example 5: Claude Code Plugin (no modifiers)
+
+**Base (Claude Code Plugin):**
+- README: Required
+- Install Guide: Required
+- Skill/Command Reference: Required
+- ADRs: Recommended
+- Test Plan: Recommended
+- Changelog/Contributing: Recommended
+- Threat Model: Optional
+- Runbook: Optional
+- API Spec: Optional
+- Deployment Proc: Optional
+- Data Model: Optional
+
+**Why this rubric:** Plugins are distributed to users, not deployed to runtime infrastructure. The traditional ops docs (runbook, deployment procedure, data model) don't apply unless the plugin persists data or has a meaningful runtime surface. Instead, what matters is "what does this plugin do, how do I install it, and what commands does it expose" — hence README, Install Guide, and Skill/Command Reference as the three Required docs.
+
+**If the plugin persists user data** (e.g., `~/.claude/profiles/builder.json`), elevate Threat Model to Recommended and document what's stored, where, and how users can inspect or delete it.
+
+**Final:** README (R), Install Guide (R), Skill/Command Reference (R), ADRs (Rec), Test Plan (Rec), Changelog/Contributing (Rec), everything else (Opt).
+
+---
+
 ## Tier Definitions
 
 ### Required (Deployment Blocker)
@@ -253,4 +294,4 @@ Agents should respect user overrides. Document the override in state for future 
 
 ---
 
-**Last updated:** 2026-04-11 | **Reference version:** 1.0
+**Last updated:** 2026-04-15 | **Reference version:** 1.1
