@@ -21,20 +21,64 @@ The dual-layer design means you get intelligent recommendations in conversations
 
 ## Installation
 
-### As a Cowork/Claude Code Plugin
+Pick whichever matches how you're running Claude Code. All three lead to the same plugin working.
 
-1. In Cowork or Claude Code, open the Plugins menu
-2. Search for "Vibe Doc"
-3. Click Install
-4. Navigate to your project directory and run `/scan` to begin
+### Option 1: Claude Desktop — Add marketplace (recommended)
 
-### As a CLI
+The cleanest install. Pulls straight from GitHub, no file download, supports `Sync` to update.
+
+1. Open Claude Desktop → **Personal plugins** panel
+2. Click the **+** button → **Add marketplace**
+3. Enter: `estevanhernandez-stack-ed/Vibe-Doc`
+4. Click **Sync**
+
+Claude Desktop reads `.claude-plugin/marketplace.json` at the repo root and loads the `vibe-doc` plugin from inside `./packages/vibe-doc`. The slash commands (`/scan`, `/generate`, `/check`, `/status`) become available.
+
+### Option 2: Claude Code CLI + terminal CLI — npm
+
+The only path that gives you both the Claude Code plugin surface **and** a standalone `vibe-doc` binary you can run from any terminal.
 
 ```bash
 npm install -g @esthernandez/vibe-doc
-# or
-npx @esthernandez/vibe-doc scan
+vibe-doc --version
+# 0.3.0
 ```
+
+Now you can run Vibe Doc either conversationally via Claude Code slash commands (install Option 1 alongside this), or deterministically from any shell:
+
+```bash
+cd ~/Projects/my-app
+vibe-doc scan
+vibe-doc generate adr
+vibe-doc check --threshold 20
+```
+
+The dual-layer design means CI/CD pipelines use the CLI (reproducible, no conversational loop), and interactive sessions use the skills (agent-interviewed, conversational fill).
+
+### Option 3: Claude Desktop — Upload plugin (for local iteration)
+
+For testing plugin changes locally before pushing to GitHub.
+
+1. Clone the repo: `git clone https://github.com/estevanhernandez-stack-ed/Vibe-Doc`
+2. Build a `.plugin` bundle:
+
+   ```bash
+   python scripts/build-plugin.py
+   ```
+
+   This writes `bundles/vibe-doc-<version>.plugin` — a zip archive Cowork accepts directly. The script excludes `dist/`, `node_modules/`, and other runtime artifacts per Cowork's plugin spec.
+3. In Claude Desktop → **Personal plugins** → **+** → **Upload plugin**, pick the `.plugin` file.
+
+You can also download a pre-built `.plugin` file from the [GitHub releases page](https://github.com/estevanhernandez-stack-ed/Vibe-Doc/releases) — each tagged release ships a ready-to-upload asset.
+
+### Which option should I use?
+
+| Situation                                                    | Option                                                        |
+| ------------------------------------------------------------ | ------------------------------------------------------------- |
+| I want to use Vibe Doc conversationally in Claude Desktop    | **Option 1** (Add marketplace)                                |
+| I want the `vibe-doc` CLI available in my terminal / CI / IDE | **Option 2** (npm) — pair with Option 1 for full coverage    |
+| I'm developing or testing plugin changes locally             | **Option 3** (Upload plugin)                                  |
+| I want to install without an internet connection             | **Option 3** — download `.plugin` from releases ahead of time |
 
 ## Quick Start
 
