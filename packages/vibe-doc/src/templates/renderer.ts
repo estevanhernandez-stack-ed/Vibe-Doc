@@ -42,7 +42,9 @@ export function renderTemplate(template: string, data: RenderData): string {
   const confidenceLevels: SectionConfidence[] = [];
 
   // Extract all token patterns
-  const tokenPattern = /\{\{(extracted|user)\.([a-z0-9\-]+)\}\}/g;
+  // Supports both kebab-case (existing convention: service-overview) and
+  // camelCase (new plugin-oriented templates: installSteps).
+  const tokenPattern = /\{\{(extracted|user)\.([a-zA-Z0-9\-]+)\}\}/g;
   const tokens = new Map<string, string>();
 
   let match;

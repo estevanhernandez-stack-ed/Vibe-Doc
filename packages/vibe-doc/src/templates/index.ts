@@ -39,17 +39,22 @@ export function loadTemplate(docType: string, cacheDir?: string): string {
 
 /**
  * Get path to the embedded template file
+ *
+ * __dirname at runtime is dist/templates/ (compiled from src/templates/index.ts).
+ * Templates are copied to dist/templates/embedded/ by scripts/copy-templates.js.
+ * So the templates directory relative to __dirname is just ./embedded/.
+ *
+ * The same path works in dev under tsx, where __dirname is src/templates/ and
+ * templates live at src/templates/embedded/.
+ *
+ * This was historically broken: the function looked for
+ * `__dirname/templates/embedded/` which produced `dist/templates/templates/embedded/`
+ * in published packages (nested "templates" directory). Combined with the
+ * copy-templates.js fast-glob bug (fixed in v0.2.2), template loading failed
+ * in every published version before v0.2.3.
  */
 export function getTemplatePath(docType: string): string {
-  // __dirname is the dist directory at runtime
-  // Look for templates in both src (dev) and dist (prod) locations
-  let templatesDir = path.join(__dirname, 'templates', 'embedded');
-  
-  // In development, __dirname points to src/templates, so adjust
-  if (!fs.existsSync(templatesDir)) {
-    templatesDir = path.join(__dirname, '..', '..', 'src', 'templates', 'embedded');
-  }
-
+  const templatesDir = path.join(__dirname, 'embedded');
   return path.join(templatesDir, `${docType}.md`);
 }
 

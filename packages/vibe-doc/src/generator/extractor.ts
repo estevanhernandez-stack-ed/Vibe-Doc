@@ -440,6 +440,100 @@ function extractThreatModel(projectPath: string, state: VibedocState): Record<st
 }
 
 /**
+ * Extract data for README template.
+ * Pulls project name and description from package.json when available.
+ */
+function extractReadme(projectPath: string, _state: VibedocState): Record<string, string> {
+  const pkg = readPackageJson(projectPath);
+  const extracted: Record<string, string> = {};
+  if (pkg?.name) {
+    extracted.projectName = pkg.name;
+  }
+  if (pkg?.description) {
+    extracted.tagline = pkg.description;
+    extracted.overview = pkg.description;
+  }
+  // Try to surface a reasonable install command for npm packages
+  if (pkg?.name) {
+    extracted.installation = `\`\`\`bash\nnpm install ${pkg.name}\n\`\`\``;
+  }
+  return extracted;
+}
+
+/**
+ * Extract data for Install Guide template.
+ * Uses package.json engines field for Node version prerequisites.
+ */
+function extractInstallGuide(projectPath: string, _state: VibedocState): Record<string, string> {
+  const pkg = readPackageJson(projectPath);
+  const extracted: Record<string, string> = {};
+  const prereqParts: string[] = [];
+
+  if (pkg?.engines?.node) {
+    prereqParts.push(`- Node.js ${pkg.engines.node}`);
+  }
+  if (pkg?.engines && Object.keys(pkg.engines).length > 0) {
+    for (const [engine, version] of Object.entries(pkg.engines)) {
+      if (engine !== 'node') {
+        prereqParts.push(`- ${engine} ${version}`);
+      }
+    }
+  }
+  if (prereqParts.length > 0) {
+    extracted.prerequisites = prereqParts.join('\n');
+  }
+  if (pkg?.name) {
+    extracted.installSteps = `\`\`\`bash\nnpm install -g ${pkg.name}\n\`\`\``;
+  }
+  return extracted;
+}
+
+/**
+ * Extract data for Skill/Command Reference template.
+ * Lists SKILL.md files and commands/*.md files from the documentation inventory.
+ */
+function extractSkillCommandReference(
+  _projectPath: string,
+  state: VibedocState
+): Record<string, string> {
+  const extracted: Record<string, string> = {};
+  const docFiles = state.artifactInventory?.categories?.documentation?.files ?? [];
+
+  const normalizedDocs = docFiles.map((f) => f.replace(/\\/g, '/'));
+  const skillFiles = normalizedDocs.filter((f) => /\/skills\/[^/]+\/SKILL\.md$/i.test(f));
+  const commandFiles = normalizedDocs.filter((f) => /\/commands\/[^/]+\.md$/i.test(f));
+
+  if (skillFiles.length > 0) {
+    const skillNames = skillFiles.map((f) => {
+      const match = f.match(/\/skills\/([^/]+)\//);
+      return match ? `- \`${match[1]}\`` : null;
+    }).filter(Boolean);
+    extracted.skillList = skillNames.join('\n');
+  }
+
+  if (commandFiles.length > 0) {
+    const commandNames = commandFiles.map((f) => {
+      const name = path.basename(f, '.md');
+      return `- \`/${name}\``;
+    });
+    extracted.commandList = commandNames.join('\n');
+  }
+
+  return extracted;
+}
+
+/**
+ * Extract data for Changelog/Contributing template.
+ * Minimal — the template is mostly user-filled.
+ */
+function extractChangelogContributing(
+  _projectPath: string,
+  _state: VibedocState
+): Record<string, string> {
+  return {};
+}
+
+/**
  * Main extraction function - maps doc type to specific extractor
  */
 export function extractDataForDocType(
@@ -473,6 +567,18 @@ export function extractDataForDocType(
         break;
       case 'threat-model':
         extracted = extractThreatModel(projectPath, state);
+        break;
+      case 'readme':
+        extracted = extractReadme(projectPath, state);
+        break;
+      case 'install-guide':
+        extracted = extractInstallGuide(projectPath, state);
+        break;
+      case 'skill-command-reference':
+        extracted = extractSkillCommandReference(projectPath, state);
+        break;
+      case 'changelog-contributing':
+        extracted = extractChangelogContributing(projectPath, state);
         break;
       default:
         logger.warn('Unknown doc type for extraction', { docType });
