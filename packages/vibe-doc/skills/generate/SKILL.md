@@ -5,19 +5,35 @@ description: >
   "write my documentation", "fix my gaps", "create a runbook",
   "write the threat model", "generate missing docs", or wants to
   produce technical documentation from their project artifacts.
+  Runs an autonomous-first workflow: reads project files, synthesizes
+  as much as possible without asking, then interviews the user only
+  for the sections that genuinely need human judgment.
 ---
 
 # Vibe Doc Generate Skill
 
-Conversational pipeline to select documentation gaps and generate complete documents.
+Autonomous-first pipeline: read the project, fill what you can, then ask the user only for the sections that need human judgment.
 
 **Shared behavior:** Read `skills/guide/SKILL.md` for state management, CLI patterns, checkpoints, and output formatting.
 
 ---
 
-## Entry: Check for Existing Scan
+## Design Intent
 
-**First step: verify state exists**
+The old model was **agent-interviewed, user-informed**: the agent asked 2-3 synthesis questions per doc type and the user answered them all. That's overkill for factual docs whose content lives in the codebase.
+
+The new model is **autonomous-first**:
+
+1. **Read the project files directly** — README, CLAUDE.md, package.json, SKILL files, source entry points, git history, CI configs
+2. **Synthesize confidently** from what you read — fill in template sections where you have strong evidence
+3. **Interview only for the gaps** — ask targeted questions for the sections where code can't tell you the answer (security judgment, business intent, operational context the team knows but hasn't written down yet)
+4. **Present the result** — show the user what you filled in, what you left as NEEDS INPUT, and let them review
+
+The CLI (`vibe-doc generate <doctype>`) still produces the deterministic scaffold. This skill layers intelligence on top: same scaffold, but the agent keeps going and fills it in from the codebase before handing off to the user.
+
+---
+
+## Entry: Verify Scan State
 
 ```bash
 if [ ! -f "<project-path>/.vibe-doc/state.json" ]; then
@@ -26,366 +42,318 @@ if [ ! -f "<project-path>/.vibe-doc/state.json" ]; then
 fi
 ```
 
-If state doesn't exist, redirect user to **Scan skill** and exit.
+If state doesn't exist, redirect to the **Scan skill** and exit.
 
 ---
 
-## Conversational Flow
+## Main Flow
 
-### 1. Present Gap Summary & Offer Choices
+### 1. Present Gaps and Confirm Selection
 
-Read state and show gaps:
+Read state and show gaps grouped by tier:
 
 ```
-Documentation Gaps
-━━━━━━━━━━━━━━━━━━
+Documentation Gaps — <Category>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Required (Deployment Blockers) — 3 missing:
-  □ Threat Model
-  □ Architecture Decision Records
-  □ Runbook (Deployment & Operations)
+Required (ship blockers) — N missing:
+  □ README
+  □ Install Guide
+  □ Skill/Command Reference
 
-Recommended (Should Do) — 4 missing:
-  □ API Specification
-  □ Deployment Procedure
-  □ Data Model Documentation
-  □ Security Hardening Guide
-
-Optional (Nice to Have) — 3 missing:
-  □ Changelog
-  □ Contributing Guide
-  □ Performance Benchmarks
+Recommended (should do) — M missing:
+  □ ADRs
+  □ Test Plan
+  □ Changelog / Contributing
 
 Which would you like to generate?
 
-[required] → Start with all Required docs
-[pick] → Let me choose specific gaps
-[single <name>] → Generate one doc now
-[all] → Generate everything
+[required] Start with all Required docs (runs autonomous fill in parallel)
+[pick]     Let me choose specific docs
+[<name>]   Single doc by name
+[all]      Every missing doc, Required + Recommended + Optional
 ```
 
-**User chooses:**
-- `required` → Go to step 2a (Generate Required, one at a time)
-- `pick` → Go to step 2b (Selection menu)
-- `single Threat Model` → Go directly to step 3 for that doc
-- `all` → Go to step 2a with all gaps pre-selected
+**Do not default to "all"** unless the user asks for it. More docs = slower, more tokens, more noise.
 
 ---
 
-### 2a. Sequential Generation — One at a Time
+### 2. Route by Count
 
-For each selected gap, execute the generation workflow:
+- **Single doc selected** → go to **Section 3: Autonomous Fill (single doc)**
+- **Multiple docs selected** → go to **Section 4: Parallel Dispatch (multiple docs)**
 
-1. **Ask synthesis questions** (2-3 targeted questions for this doc type)
-2. **Capture answers** (save to temporary JSON)
-3. **Run generation command**
-4. **Present results** (file paths, confidence summary)
-5. **Confirm before moving to next doc**
+---
 
-**For example, generating a Threat Model:**
+### 3. Autonomous Fill (Single Doc)
 
-```
-Threat Model Synthesis
-━━━━━━━━━━━━━━━━━━━━━━
+Follow these steps, in order, for each doc to generate.
 
-I found security discussion in your artifacts, but I need 2 more details:
-
-1. Beyond authentication and data encryption, are there other sensitive 
-   operations? (payments, PII access, admin functions, integrations?)
-
-2. Are there known external dependencies or services your app relies on?
-   (Third-party APIs, databases, cache layers?)
-
-[Capture answers and save to temp JSON]
-
-Generating threat model...
-```
-
-Then run:
+#### 3a. Run the CLI for the scaffold
 
 ```bash
-cd <project-path> && npx vibe-doc generate threat-model \
-  --format both \
-  --answers '{"externalDeps":["Firebase","Stripe"],"sensitiveOps":["payment","admin"]}'
+cd <project-path> && npx vibe-doc generate <docType> --format both
 ```
 
-**If generation succeeds:**
+This produces `docs/generated/<docType>.md` with deterministic-extractor fields pre-filled and `NEEDS INPUT` comments marking the gaps.
 
-```
-✓ Threat Model generated
+Read the scaffold back so you can edit it in place.
 
-Files created:
-  • docs/generated/threat-model.md (2,400 words)
-  • docs/generated/threat-model.docx
+#### 3b. Gather source material
 
-Confidence summary:
-  • Attack surface (High) — extracted from code + interview
-  • Threat scenarios (Medium) — based on patterns, flagged for review
-  • Mitigations (Medium) — industry standard, review for your stack
-  • Compliance mapping (High) — HIPAA requirements auto-linked
+Read the files most relevant to this doc type. Use the hint table below; add files based on what the scan inventory shows.
 
-Next: Review the markdown file, then approve or regenerate.
-
-[approve] → Save and move to next doc
-[revise] → Ask different questions and regenerate
-[skip] → Move to next gap without saving
-```
-
-**If user approves:**
-- Move to next selected doc (repeat step 2a)
-
-**If user revises:**
-- Ask follow-up questions
-- Re-run generation with new answers
-
-**If user skips:**
-- Mark gap as deferred
-- Move to next doc
-
----
-
-### 2b. Selection Menu (If User Picks)
-
-Show all gaps as a checklist:
-
-```
-Which docs would you like to generate? (Mark with [x])
-
-Required:
-  [x] Threat Model
-  [ ] Architecture Decision Records
-  [ ] Runbook
-
-Recommended:
-  [x] API Specification
-  [ ] Deployment Procedure
-  [ ] Data Model Documentation
-
-Optional:
-  [ ] Changelog
-  [ ] Contributing Guide
-
-[done] → Generate the 2 checked docs
-[add all required] → Select all Required docs
-[clear] → Start over
-```
-
-After selection, confirm:
-
-```
-You've selected 2 docs to generate. Estimate time: 10-15 minutes.
-
-Ready to start?
-[yes] → Begin generation
-[no] → Go back and adjust
-```
-
-Then proceed to step 2a (Sequential Generation).
-
----
-
-### 3. Synthesis Questions — Doc Type Specifics
-
-For each document type, ask targeted questions to fill extraction gaps.
-
-**Use breadcrumb heuristics from `skills/guide/references/breadcrumb-heuristics.md`.**
-
-**Example questions per doc type:**
-
-| Doc Type | Sample Questions |
+| Doc Type | Read These Files |
 |----------|------------------|
-| **Threat Model** | What sensitive operations exist? Known external dependencies? Attack vectors you're concerned about? |
-| **ADRs** | Major architecture decisions made? Tradeoffs considered (monolith vs. microservices)? Tech stack choices? |
-| **Runbook** | Deployment frequency? Health checks and alerts? Rollback procedure? On-call escalation? |
-| **API Spec** | Authentication method? Rate limiting? Pagination? Error codes? Versioning strategy? |
-| **Deployment Procedure** | CI/CD pipeline stages? Approval gates? Rollback trigger? Monitoring post-deploy? |
-| **Test Plan** | Coverage targets? Manual vs. automated split? Test environments? Performance benchmarks? |
-| **Data Model** | Data retention requirements? PII classification? Schema versioning? Backup/restore? |
+| **readme** | `package.json`, `CLAUDE.md`, any existing `README.md`, main source entry file (e.g., `src/index.ts`), `docs/` summaries |
+| **install-guide** | `package.json` (engines, scripts, bin), any existing `INSTALL.md`, CI configs (`.github/workflows/*.yml`), install-related scripts |
+| **skill-command-reference** | every `skills/*/SKILL.md`, every `commands/*.md`, `.claude-plugin/plugin.json` |
+| **changelog-contributing** | `git log --oneline -100`, any existing `CHANGELOG.md`, any existing `CONTRIBUTING.md`, `package.json` version history |
+| **adr** | `CLAUDE.md`, commit messages with "decision:" or "arch:" prefixes, any `docs/adr/` or `docs/decisions/` folder |
+| **runbook** | `package.json` scripts, `Dockerfile`, `.github/workflows/*.yml`, any `scripts/` folder, any deploy config |
+| **api-spec** | Route/controller source files, `openapi.yaml`, `swagger.json`, any existing API docs |
+| **deployment-procedure** | `.github/workflows/*.yml`, `Dockerfile`, deploy scripts, cloud infra configs (terraform, cdk, pulumi) |
+| **test-plan** | Test files, test runner configs (`jest.config.*`, `pytest.ini`), CI test stages |
+| **data-model** | Schema/migration files, ORM model files, database config |
+| **threat-model** | Auth code, permission logic, sensitive-data handling, external API clients, secrets config |
 
-**Question delivery format:**
+For each file, extract what's relevant to the template's sections. Ignore irrelevant content.
 
-```
-Threat Model — Question 1 of 2
+#### 3c. Fill the template autonomously
 
-[Question text]
+Open the scaffold at `docs/generated/<docType>.md`. For each `NEEDS INPUT` comment:
 
-Your answer: [capture user input]
-```
+1. **Can you synthesize this section from what you read?** If yes, replace the empty block (or the `{{user.*}}` placeholder still sitting there) with real content. Remove the `NEEDS INPUT` comment to signal the section is filled.
+2. **Do you need human judgment?** If yes, leave the `NEEDS INPUT` comment in place. These will become the questions you ask the user in the next step.
 
----
+**Rules for autonomous fills:**
 
-### 4. Generation Command
+- **Cite your sources inline** — at the end of a section you wrote, add a markdown comment: `<!-- Source: package.json, README.md -->`. This lets the user verify your work quickly.
+- **Don't fabricate.** If a section would require making something up (an SLA target you don't see, a rollback procedure that isn't documented), leave it as NEEDS INPUT. Confident content only.
+- **Prefer brevity over padding.** A 3-sentence section filled from real evidence beats a 3-paragraph section of boilerplate.
+- **Match the existing doc's voice.** Read at least one existing doc in the repo (README is usually a good reference) to calibrate tone.
 
-After collecting answers, save to JSON and run CLI:
+Write the filled-in doc back to `docs/generated/<docType>.md`.
 
-```bash
-ANSWERS_JSON='{"externalDeps":["..."],"sensitiveOps":["..."]}'
-cd <project-path> && npx vibe-doc generate threat-model \
-  --format both \
-  --answers "$ANSWERS_JSON"
-```
+#### 3d. Interview the user for remaining gaps
 
-**Parse output:**
-- Extract file paths (e.g., `docs/generated/threat-model.md`)
-- Extract confidence scores per section
-- Extract source attributions
-
----
-
-### 5. Present Results
-
-Show what was created:
+Present a summary:
 
 ```
-✓ Threat Model generated
+✓ Autonomous pass complete — docs/generated/<docType>.md
 
-Files:
-  markdown:  docs/generated/threat-model.md (2,400 words)
-  docx:      docs/generated/threat-model.docx
+Filled from codebase:
+  • <section A> — from <source files>
+  • <section B> — from <source files>
+  • <section C> — from <source files>
 
-Content breakdown:
-  • Executive summary
-  • Attack surface inventory (extracted from code + your input)
-  • Threat scenarios (attack trees, entry points)
-  • Mitigations and controls
-  • Compliance checklist (HIPAA §164.308 mapping)
+Still need your input:
+  • <section X> — <why the agent couldn't fill it>
+  • <section Y> — <why the agent couldn't fill it>
 
-Confidence by section:
-  ✓ Attack surface (94%) — High confidence
-  ⚠ Mitigations (72%) — Medium, please review
-  ✓ Compliance (88%) — High confidence
-
-Source attributions included in document.
-
-Next step: Review the markdown, then either:
-[approve] → Mark as complete and generate more docs
-[revise] → Ask different questions and regenerate
-[skip] → Move to next gap
+I'll ask about those two now. If you'd rather fill them yourself
+later, say "defer" and I'll leave the NEEDS INPUT comments.
 ```
 
----
-
-### 6. Document Review Checkpoint
-
-Ask user to review before moving on:
+Then ask **one question at a time** for each remaining gap. Each question should be specific, reference the context, and accept short answers:
 
 ```
-Before we move to the next doc, take a moment to review what was generated.
+Question 1 of 2: <section X>
 
-Open: docs/generated/threat-model.md
+<one-sentence explanation of what this section is for>
 
-Things to check:
-  • Does the attack surface match your app?
-  • Are mitigations practical for your stack?
-  • Any confidence flags (marked ⚠) that need manual review?
+From what I read, you have <X, Y, Z>. What's the <specific thing>?
+```
 
-[approve] → Document is good, move to next gap
-[revise] → I'll ask different questions and regenerate
-[edit] → I'll open the markdown so you can edit manually
-[skip] → Skip this doc for now, move to next
+Capture each answer and update the doc in place. When all questions are answered, remove the `NEEDS INPUT` comments for those sections.
+
+#### 3e. Present for review
+
+```
+✓ <docType>.md is ready for review.
+
+Coverage:
+  • Sections filled autonomously: N
+  • Sections filled from your answers: M
+  • Sections still marked NEEDS INPUT: 0 (or K if deferred)
+
+Open: docs/generated/<docType>.md
+
+[approve]  Move to next doc (or finish if last)
+[revise]   Ask different questions / read more files / regenerate
+[edit]     I'll wait while you edit manually, then approve
+[defer]    Mark remaining gaps as NEEDS INPUT and move on
 ```
 
 ---
 
-### 7. Completion Summary
+### 4. Parallel Dispatch (Multiple Docs)
 
-After all selected docs are generated:
+When the user selects multiple docs, **dispatch one subagent per doc type in parallel** using the Task tool. This is the recommended path — it's faster and each agent gets a focused slice of the codebase to read.
+
+#### 4a. Plan the dispatch
+
+For each selected doc, build a subagent prompt that covers Section 3a-c (scaffold + read sources + fill autonomously). Do **not** include the conversational interview (Section 3d) in the subagent prompt — that happens in the main agent after all subagents return, so questions don't interleave.
+
+Subagent prompt template:
 
 ```
-Generation Complete ✓
-━━━━━━━━━━━━━━━━━━━━
+You are generating documentation for a <Category> project at <project-path>.
 
-Generated: 3 documents
-  ✓ Threat Model
-  ✓ API Specification
-  ✓ Runbook
+Task: Produce a fully-filled `docs/generated/<docType>.md` from the project's
+existing artifacts. Do NOT ask the user questions — fill only what you can
+confidently synthesize from source files, and leave NEEDS INPUT comments for
+anything you can't.
 
-Files saved to: docs/generated/
+Steps:
+1. Run: `cd <project-path> && npx vibe-doc generate <docType> --format both`
+2. Read the generated scaffold at docs/generated/<docType>.md
+3. Read these source files: <from the hint table, plus inventory-specific adds>
+4. For each NEEDS INPUT section in the scaffold:
+   - If you can fill it confidently from what you read, replace it with real
+     content and add an inline <!-- Source: ... --> comment
+   - If you can't, leave the NEEDS INPUT comment so the main agent can ask the user
+5. Write the updated doc back to docs/generated/<docType>.md
+6. Report back with: (a) which sections you filled, (b) which sections still
+   need human input, (c) anything suspicious you noticed in the artifacts
 
-Coverage improved: 28% → 57% (4 of 7 Required docs)
-
-What's next?
-
-[more] → Generate more docs
-[check] → Run CI validation
-[done] → Finish (docs are ready to review)
+Do not dispatch further subagents. Do not run the interview. Return findings
+to the main agent.
 ```
+
+#### 4b. Dispatch in parallel
+
+Use the Task tool to fire all subagents in the same message. Each subagent runs independently and edits its own doc.
+
+#### 4c. Collect results
+
+When all subagents return, aggregate their findings:
+
+```
+✓ Autonomous pass complete — <N> docs
+
+docs/generated/readme.md
+  Filled: overview, install, usage, license
+  Needs input: configuration (no .env.example found)
+
+docs/generated/install-guide.md
+  Filled: prerequisites, install steps, verification
+  Needs input: troubleshooting (no existing error documentation)
+
+docs/generated/skill-command-reference.md
+  Filled: all sections (found 8 SKILL files and 4 command definitions)
+  Needs input: none — ready to ship
+
+Total: <X> sections filled autonomously, <Y> need your input.
+```
+
+#### 4d. Sequential interview for gaps
+
+Now run the interview phase (Section 3d) **sequentially** across all docs — for each doc that has unfilled gaps, ask its questions one at a time, update the doc, move to the next. Don't interleave questions across docs; the user needs to stay focused on one doc at a time.
+
+#### 4e. Present all docs for review
+
+```
+Generation complete ✓
+
+Ready for review:
+  • docs/generated/readme.md             (0 gaps remaining)
+  • docs/generated/install-guide.md      (0 gaps remaining)
+  • docs/generated/skill-command-reference.md  (0 gaps remaining)
+
+Coverage improved: <before>% → <after>% (<n> Required docs satisfied)
+
+Open each file to review. When you're ready, you can promote them to the
+repo root (README.md, INSTALL.md, etc.) or keep them in docs/generated/
+as a staging area.
+
+[approve-all]  Done, docs are good
+[revise <name>]  Re-run autonomous fill on one doc with different focus
+[promote]     Move files from docs/generated/ to the repo root
+```
+
+---
+
+## When to Fall Back to the Pure Interview Flow
+
+The autonomous-first flow works well for docs whose content lives in the codebase. It works **less well** for docs where the substance is judgment, intent, or future plans — specifically:
+
+- **Threat Model** — requires security reasoning the agent shouldn't invent
+- **ADRs for decisions not yet documented** — the "why" is in someone's head
+- **Deployment Procedure for an app that hasn't deployed yet** — no evidence exists
+- **Data Model for a pre-alpha app** — no schema yet
+
+For these, default to a **short autonomous pass** (fill only what's obviously there) and spend most of the time in the interview phase. Lean on the synthesis questions from `skills/guide/references/breadcrumb-heuristics.md`.
+
+---
+
+## Anti-Patterns
+
+- **Never fabricate.** If you don't have evidence, leave NEEDS INPUT. A scaffold with honest gaps is better than a polished doc that's half hallucination.
+- **Never cite sources you didn't read.** Inline source comments must point to files the agent actually opened.
+- **Don't auto-promote generated files.** `docs/generated/` is a staging area. Moving files to the repo root (README.md, INSTALL.md, CHANGELOG.md) is always an explicit user action.
+- **Don't ask questions the code already answers.** Before asking a question, re-verify you couldn't have derived it from a file you haven't read yet.
+- **Don't interleave questions across docs** in the parallel path. One doc at a time for the interview phase, even if the autonomous passes ran in parallel.
 
 ---
 
 ## Error Handling
 
-### No Scan Exists
+### CLI scaffold generation fails
 
 ```
-I don't see a project profile yet. Run the Scan skill first to:
-  • Analyze your artifacts
-  • Classify your app type
-  • Identify documentation gaps
+The scaffold step failed: <error>
 
-Then come back here to generate docs.
+This usually means:
+  • The doc type isn't registered (check `vibe-doc templates list`)
+  • The template file is missing from the install
+  • A filesystem error blocked writing to docs/generated/
+
+[retry] Try again
+[skip]  Skip this doc and move to the next
 ```
 
-### Generation Command Fails
+### Autonomous pass runs out of context
 
-```
-Generation failed: [error message]
+If reading too many source files would exceed a reasonable context budget, narrow the scope:
 
-This could mean:
-  • The answers you provided didn't match expected format
-  • The doc template is missing or corrupted
-  • A file system error occurred
+- Read only the top 10-15 files most relevant to the doc type
+- Prefer summary files (READMEs, CLAUDE.md, SKILL.md) over large source files
+- Skim rather than read exhaustively — you're looking for evidence, not comprehension
 
-Options:
-[retry] → Try again with same questions
-[different] → Ask different synthesis questions
-[manual] → Skip this doc and move to next
-```
+### Subagent returns with everything marked NEEDS INPUT
 
-### Low Confidence Sections
+If a subagent couldn't fill any sections, it probably got the wrong doc type or the repo genuinely has no evidence. Options:
 
-If a section has <70% confidence:
-
-```
-⚠ Low Confidence Flag: "Mitigations" section (68% confidence)
-
-This section was generated from limited artifact information and may need 
-manual review or revision. I've marked it with flags in the document.
-
-Suggestions:
-  • Review "Mitigations" manually and adjust
-  • Re-generate with more specific answers to synthesis questions
-  • Leave as-is (it's a starting point, not final)
-
-[revise] → Ask different questions and regenerate
-[continue] → Keep this version, move to next doc
-```
+- Fall back to the pure interview flow for that doc
+- Skip that doc (not everything should be generated for every project)
+- Ask the user to point the agent at the right files manually
 
 ---
 
 ## State & Output
 
 **Read from `.vibe-doc/state.json`:**
-- Classification (to select appropriate doc types)
-- Gaps list (to show what's available to generate)
-- Generation history (to track what's been done)
+- Classification (to pick the right doc types)
+- Gaps list (to know what's missing)
+- Artifact inventory (to know which files to read during autonomous pass)
 
-**Write to `.vibe-doc/state.json`:**
-- Generated doc metadata (file paths, timestamps, confidence scores)
+**Write to:**
+- `docs/generated/<docType>.md` — the filled-in doc (autonomous + interview results)
+- `docs/generated/<docType>.docx` — DOCX version from the CLI scaffold pass
+- `.vibe-doc/state.json` — generation history (file paths, timestamps)
 
-**Files created in user's project:**
-- `docs/generated/<doc-type>.md` — markdown version
-- `docs/generated/<doc-type>.docx` — docx version
-- `docs/generated/.history/<doc-type>-<timestamp>.md` — version history
+**Files the agent should NOT modify:**
+- Repo-root docs (README.md, INSTALL.md, CHANGELOG.md) — promotion is explicit user action
+- Source code — docs generation is read-only on the codebase
+- `.vibe-doc/state.json`'s `classification` or `gapReport` blocks — those are owned by scan/check skills
 
 ---
 
 ## Synthesis Questions Reference
 
-Full question sets per doc type are in `skills/guide/references/breadcrumb-heuristics.md`.
-
-Each skill consults that reference to build context-appropriate questions for each gap type.
+When the interview phase is needed, question sets per doc type live in `skills/guide/references/breadcrumb-heuristics.md`. Each breadcrumb's `gapQuestions` field is a pre-written list of targeted questions for that doc type — use them as a starting point and adapt to what you already filled in.
 
 ---
 
-**Last updated:** 2026-04-11 | **Version:** 1.0
+**Last updated:** 2026-04-15 | **Version:** 2.0 (autonomous-first)
