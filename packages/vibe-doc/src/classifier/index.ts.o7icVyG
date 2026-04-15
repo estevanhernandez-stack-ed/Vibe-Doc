@@ -1,0 +1,156 @@
+/**
+ * Classifier Orchestrator
+ * Main entry point for hybrid classification
+ */
+
+import { ArtifactInventory, Classification, DeploymentContext } from '../state/schema';
+import { logger } from '../utils/logger';
+import { extractSignals, Signal } from './signals';
+import { scoreClassification, ScoringResult, Category, Context } from './scoring-engine';
+import { buildClassificationPrompt } from './llm-prompt';
+
+export interface ClassificationResult {
+  resolved: boolean;
+  classification?: Classification;
+  llmPrompt?: string;
+  candidates?: Array<{ category: string; score: number }>;
+}
+
+/**
+ * Classify a project based on artifact inventory
+ * Returns either a high-confidence classification or a prompt for LLM fallback
+ */
+export function classify(inventory: ArtifactInventory): ClassificationResult {
+  logger.info('Starting hybrid classification');
+
+  // Step 1: Extract signals from inventory
+  const signals = extractSignals(inventory);
+  logger.info('Signals extracted', { count: signals.length });
+
+  // Step 2: Run scoring engine
+  const ruleResults = scoreClassification(signals);
+  logger.info('Rule-based scoring complete', {
+    confidence: ruleResults.confidence,
+    topCategory: ruleResults.categories[0],
+  });
+
+  // Step 3: Check confidence threshold
+  if (ruleResults.confidence >= 0.85) {
+    // High confidence - return classification directly
+    const classification = buildClassification(ruleResults, inventory);
+    logger.info('Classification resolved with high confidence', {
+      category: classification.primaryCategory,
+      confidence: classification.confidence,
+    });
+
+    return {
+      resolved: true,
+      classification,
+    };
+  }
+
+  // Low confidence - prepare LLM prompt
+  logger.info('Classification confidence too low, preparing LLM prompt', {
+    confidence: ruleResults.confidence,
+  });
+
+  const llmPrompt = buildClassificationPrompt(inventory, ruleResults);
+
+  return {
+    resolved: false,
+    llmPrompt,
+    candidates: ruleResults.categories.map((c) => ({
+      category: c.category,
+      score: c.score,
+    })),
+  };
+}
+
+/**
+ * Build a Classification object from scoring results
+ */
+function buildClassification(
+  ruleResults: ScoringResult,
+  inventory: ArtifactInventory
+): Classification {
+  const topCategory = ruleResults.categories[0];
+  const secondaryCategory =
+    ruleResults.categories.length > 1 ? ruleResults.categories[1] : null;
+
+  const contexts = ruleResults.contexts.map((c) => c.context);
+
+  // Map category to deployment context
+  const deploymentContext: DeploymentContext[] = mapCategoryToDeploymentContext(
+    topCategory.category as Category,
+    contexts as Context[]
+  );
+
+  return {
+    primaryCategory: topCategory.category as string,
+    secondaryCategory: secondaryCategory?.category || '',
+    deploymentContext,
+    confidence: ruleResults.confidence,
+    rationale: buildRationale(topCategory.category as Category, contexts as Context[]),
+    userConfirmed: false,
+  };
+}
+
+/**
+ * Map category and contexts to deployment context
+ */
+function mapCategoryToDeploymentContext(
+  category: Category,
+  contexts: Context[]
+): DeploymentContext[] {
+  const result: DeploymentContext[] = [];
+
+  // Determine platform based on category
+  let platform = 'cloud';
+  if (category === Category.MobileApplication) {
+    platform = 'mobile';
+  } else if (category === Category.InfrastructurePlatform) {
+    platform = 'kubernetes';
+  }
+
+  // Check for EdgeEmbedded context
+  if (contexts.includes(Context.EdgeEmbedded)) {
+    platform = 'edge';
+  }
+
+  // Determine environment based on contexts
+  let environment = 'production';
+  if (contexts.includes(Context.InternalTooling)) {
+    environment = 'staging';
+  }
+
+  // Determine scale based on contexts
+  let scale = 'small';
+  if (contexts.includes(Context.CustomerFacing)) {
+    scale = 'large';
+  } else if (contexts.includes(Context.MultiTenant)) {
+    scale = 'large';
+  }
+
+  result.push({ platform, environment, scale });
+
+  return result;
+}
+
+/**
+ * Build a rationale string for the classification
+ */
+function buildRationale(category: Category, contexts: Context[]): string {
+  let rationale = `Classified as ${category}`;
+
+  if (contexts.length > 0) {
+    rationale += ` with contexts: ${contexts.join(', ')}`;
+  }
+
+  rationale += '.';
+
+  return rationale;
+}
+
+export { extractSignals } from './signals';
+export { scoreClassification, Category, Context } from './scoring-engine';
+export { buildClassificationPrompt } 

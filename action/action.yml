@@ -1,0 +1,28 @@
+name: 'Vibe Doc Check'
+description: 'Check that required documentation exists and is current'
+
+inputs:
+  threshold:
+    description: 'Staleness threshold in commits (default: 20)'
+    required: false
+    default: '20'
+  path:
+    description: 'Path to the project root (default: .)'
+    required: false
+    default: '.'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install Vibe Doc
+      shell: bash
+      run: npm install -g @vibe-doc/cli
+
+    - name: Run Documentation Check
+      shell: bash
+      run: vibe-doc check ${{ inputs.path }} --threshold ${{ inputs.threshold }}

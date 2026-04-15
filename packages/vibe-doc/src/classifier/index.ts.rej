@@ -1,0 +1,10 @@
+--- src/classifier/index.ts
++++ src/classifier/index.ts
+@@ -59,6 +59,7 @@ function buildClassification(
+ 
+   return {
+     primaryCategory: topCategory.category as string,
+     secondaryCategory: secondaryCategory?.category || '',
+     deploymentContext,
++    contextModifiers: contexts as string[],
+     confidence: ruleResults.confidence,

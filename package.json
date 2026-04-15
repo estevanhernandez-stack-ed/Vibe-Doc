@@ -1,0 +1,10 @@
+{
+  "name": "vibe-doc",
+  "version": "0.1.0",
+  "description": "Vibe Doc - AI-powered documentation generator for coding artifacts",
+  "author": "Estevan Hernandez / 626Labs",
+  "private": true,
+  "workspaces": [
+    "packages/vibe-doc"
+  ]
+}

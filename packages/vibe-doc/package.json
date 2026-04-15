@@ -1,0 +1,40 @@
+{
+  "name": "@esthernandez/vibe-doc",
+  "version": "0.1.0",
+  "description": "Vibe Doc CLI - Command-line interface for documentation generation",
+  "author": "Estevan Hernandez / 626Labs",
+  "license": "MIT",
+  "bin": {
+    "vibe-doc": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc && npm run build:copy-templates",
+    "build:copy-templates": "node scripts/copy-templates.js",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "commander": "^11.1.0",
+    "simple-git": "^3.22.0",
+    "fast-glob": "^3.3.2",
+    "docx": "^8.5.0",
+    "diff": "^5.1.0",
+    "marked": "^11.1.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "tsx": "^4.7.0",
+    "@types/node": "^20.10.6",
+    "@types/diff": "^5.0.9"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
