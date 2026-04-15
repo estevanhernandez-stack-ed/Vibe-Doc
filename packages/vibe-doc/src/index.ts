@@ -20,10 +20,13 @@ import { extractDataForDocType } from './generator/extractor';
 
 const program = new Command();
 
+const pkgJsonPath = path.resolve(__dirname, '..', 'package.json');
+const pkgVersion = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf-8')).version;
+
 program
   .name('vibe-doc')
   .description('AI-powered documentation gap analyzer for any codebase')
-  .version('0.1.0');
+  .version(pkgVersion);
 
 /**
  * Scan command: Run artifact scanner and save inventory
