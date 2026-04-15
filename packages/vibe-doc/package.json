@@ -1,16 +1,30 @@
 {
   "name": "@esthernandez/vibe-doc",
   "version": "0.1.0",
-  "description": "Vibe Doc CLI - Command-line interface for documentation generation",
-  "author": "Estevan Hernandez / 626Labs",
+  "description": "AI-powered documentation gap analyzer and generator for modern codebases. Scans your project, classifies your architecture, and generates professional docs from your existing artifacts.",
+  "author": "626Labs LLC",
   "license": "MIT",
+  "keywords": [
+    "documentation",
+    "doc-generator",
+    "ai-docs",
+    "claude-code-plugin",
+    "626labs"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/estevanhernandez-stack-ed/Vibe-Doc.git"
+  },
+  "homepage": "https://github.com/estevanhernandez-stack-ed/Vibe-Doc#readme",
+  "bugs": "https://github.com/estevanhernandez-stack-ed/Vibe-Doc/issues",
   "bin": {
     "vibe-doc": "./dist/index.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "README.md"
   ],
   "scripts": {
     "build": "tsc && npm run build:copy-templates",

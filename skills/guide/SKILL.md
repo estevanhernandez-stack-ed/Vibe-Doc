@@ -19,9 +19,43 @@ description: >
 - **Checkpoint before proceeding.** Whenever a significant decision point is reached (classification confirmation, gap walkthrough start, generation approval), pause and ask for explicit user confirmation before moving forward.
 - **Structured output.** Use headers for sections, bullet lists for options, code blocks for file paths and commands. Make output scannable.
 
+### Unified Builder Profile (Cross-Plugin)
+
+Before engaging the user, check the **unified builder profile** at `~/.claude/profiles/builder.json`. This is the cross-plugin profile shared across all 626Labs plugins. Vibe Doc works **independently or together** with other plugins (like `@esthernandez/app-project-readiness`) — if the profile exists, use it to calibrate tone, depth, and pacing. If it doesn't, Vibe Doc still works fine with its own defaults.
+
+**How to use it:**
+
+1. At the start of any skill that talks to the user (scan, generate, check), attempt to read `~/.claude/profiles/builder.json`.
+2. If the file exists and is valid JSON, extract the `shared` block:
+   - `shared.name` — greet the builder by name
+   - `shared.technical_experience.level` — calibrate explanation depth (first-timer vs experienced)
+   - `shared.preferences.tone` — match the builder's preferred tone
+   - `shared.preferences.pacing` — match their preferred pace
+3. Also check `plugins.vibe-doc` for any Vibe-Doc-specific preferences the builder may have set in a previous session (e.g., preferred doc tier, default output format). This block is **plugin-scoped** — Vibe Doc owns it.
+4. If the file doesn't exist or `plugins.vibe-doc` is missing, proceed with defaults. Do not create the file from a Vibe Doc skill — creation is the responsibility of onboarding plugins like app-project-readiness. Vibe Doc only **writes** to `plugins.vibe-doc` if the file already exists, and only to update its own plugin-scoped preferences.
+
+**Ownership rules (critical):**
+
+- The `shared` block is **read-only for Vibe Doc**. Never modify identity, experience, or cross-plugin preferences. Another plugin owns those writes.
+- The `plugins.vibe-doc` block is **plugin-scoped**. Only Vibe Doc reads and writes this block. Never touch `plugins.<other-plugin>` namespaces.
+- Never write to the profile without a `schema_version` field. Current version: `1`.
+- Always do a read-merge-write cycle — never overwrite the whole file.
+
+**Plugin-scoped fields for `plugins.vibe-doc`:**
+
+- `preferred_tier` — `required` | `recommended` | `all`
+- `default_output_format` — `markdown` | `docx` | `both`
+- `last_scan_project` — brief description of last project scanned
+- `scans_completed` — integer
+- `last_updated` — ISO date
+
+**If the file doesn't exist and the user seems to be a first-time builder**, Vibe Doc can mention the app-project-readiness plugin as a companion: "Want to set up a persistent builder profile? The `@esthernandez/app-project-readiness` plugin handles onboarding and both plugins will share it." Only mention once. Don't nag.
+
+This is part of the **Self-Evolving Plugin Framework** (Pattern #11: Shared Profile Bus). See `docs/self-evolving-plugins-framework.md` for the full framework context.
+
 ### State Management
 
-All Vibe Doc skills operate on a persistent project state file: `.vibe-doc/state.json` in the user's mounted project folder.
+All Vibe Doc skills operate on a persistent project state file: `.vibe-doc/state.json` in the user's mounted project folder. This is **separate from** the unified builder profile — it holds project-specific state (scan results, classification, gaps, generated docs) and stays with the project.
 
 **State structure:**
 ```json
