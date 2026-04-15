@@ -1,0 +1,28 @@
+{
+  "name": "vibe-doc",
+  "owner": {
+    "name": "626Labs LLC"
+  },
+  "metadata": {
+    "description": "Vibe Doc — AI-powered documentation gap analyzer for modern codebases. Scans your project, classifies it, identifies missing technical documentation, and generates professional docs from your existing artifacts."
+  },
+  "plugins": [
+    {
+      "name": "vibe-doc",
+      "source": "./packages/vibe-doc",
+      "description": "Vibe Doc — AI-powered documentation gap analyzer and generator. Dual-layer: conversational skills (scan, generate, check, status) and a CLI (vibe-doc). Autonomous-first generate flow reads your project files and synthesizes docs before asking for input.",
+      "author": {
+        "name": "626Labs LLC"
+      },
+      "keywords": [
+        "vibe-doc",
+        "documentation",
+        "doc-generator",
+        "ai-docs",
+        "claude-code-plugin",
+        "626labs"
+      ],
+      "category": "documentation"
+    }
+  ]
+}
