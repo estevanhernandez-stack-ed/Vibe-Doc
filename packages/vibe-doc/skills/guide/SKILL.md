@@ -21,7 +21,7 @@ description: >
 
 ### Unified Builder Profile (Cross-Plugin)
 
-Before engaging the user, check the **unified builder profile** at `~/.claude/profiles/builder.json`. This is the cross-plugin profile shared across all 626Labs plugins. Vibe Doc works **independently or together** with other plugins (like `@esthernandez/app-project-readiness`) — if the profile exists, use it to calibrate tone, depth, and pacing. If it doesn't, Vibe Doc still works fine with its own defaults.
+Before engaging the user, check the **unified builder profile** at `~/.claude/profiles/builder.json`. This is the cross-plugin profile shared across all 626Labs plugins. Vibe Doc works **independently or together** with other plugins (like `@esthernandez/vibe-cartographer`) — if the profile exists, use it to calibrate tone, depth, and pacing. If it doesn't, Vibe Doc still works fine with its own defaults.
 
 **How to use it:**
 
@@ -33,7 +33,7 @@ Before engaging the user, check the **unified builder profile** at `~/.claude/pr
    - `shared.preferences.tone` — match the builder's preferred tone (usually implied by persona, but can override)
    - `shared.preferences.pacing` — match their preferred pace
 3. Also check `plugins.vibe-doc` for any Vibe-Doc-specific preferences the builder may have set in a previous session (e.g., preferred doc tier, default output format). This block is **plugin-scoped** — Vibe Doc owns it.
-4. If the file doesn't exist or `plugins.vibe-doc` is missing, proceed with defaults. Do not create the file from a Vibe Doc skill — creation is the responsibility of onboarding plugins like app-project-readiness. Vibe Doc only **writes** to `plugins.vibe-doc` if the file already exists, and only to update its own plugin-scoped preferences.
+4. If the file doesn't exist or `plugins.vibe-doc` is missing, proceed with defaults. Do not create the file from a Vibe Doc skill — creation is the responsibility of onboarding plugins like Vibe Cartographer. Vibe Doc **writes** to `plugins.vibe-doc` after successful scans and generates (if the file already exists), updating its own plugin-scoped preferences so future sessions remember the user's choices.
 
 **Ownership rules (critical):**
 
@@ -50,7 +50,7 @@ Before engaging the user, check the **unified builder profile** at `~/.claude/pr
 - `scans_completed` — integer
 - `last_updated` — ISO date
 
-**If the file doesn't exist and the user seems to be a first-time builder**, Vibe Doc can mention the app-project-readiness plugin as a companion: "Want to set up a persistent builder profile? The `@esthernandez/app-project-readiness` plugin handles onboarding and both plugins will share it." Only mention once. Don't nag.
+**If the file doesn't exist and the user seems to be a first-time builder**, Vibe Doc can mention Vibe Cartographer as a companion: "Want to set up a persistent builder profile? The `@esthernandez/vibe-cartographer` plugin handles onboarding and both plugins will share it." Only mention once. Don't nag.
 
 This is part of the **Self-Evolving Plugin Framework** (Pattern #11: Shared Profile Bus). See `docs/self-evolving-plugins-framework.md` for the full framework context.
 

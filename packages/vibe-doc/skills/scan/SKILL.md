@@ -154,7 +154,32 @@ If user chooses "walkthrough", process gaps tier by tier, starting with Required
 
 ---
 
-### 7. Completion & Next Steps
+### 7. Update Unified Builder Profile
+
+After a successful scan, update the `plugins.vibe-doc` namespace in `~/.claude/profiles/builder.json` — but **only if the file already exists** (another plugin like Vibe Cartographer creates it during onboarding).
+
+1. Read `~/.claude/profiles/builder.json`. If it doesn't exist or isn't valid JSON, skip this step entirely.
+2. Read-merge-write: update only the `plugins.vibe-doc` block, never touch `shared` or other plugin namespaces.
+3. Set these fields:
+
+```json
+{
+  "plugins": {
+    "vibe-doc": {
+      "last_scan_project": "<project name> — <one-line description from classification>",
+      "scans_completed": <increment previous value by 1, or 1 if first run>,
+      "last_scan_category": "<primaryCategory from classification>",
+      "last_updated": "<today's ISO date>"
+    }
+  }
+}
+```
+
+4. Preserve any existing fields in `plugins.vibe-doc` that aren't listed above (e.g., `preferred_tier`, `default_output_format` from a previous generate run).
+
+---
+
+### 8. Completion & Next Steps
 
 ```
 Scan Complete ✓

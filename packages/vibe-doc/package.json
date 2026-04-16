@@ -1,6 +1,6 @@
 {
   "name": "@esthernandez/vibe-doc",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "AI-powered documentation gap analyzer and generator for modern codebases. Scans your project, classifies your architecture, and generates professional docs from your existing artifacts.",
   "author": "626Labs LLC",
   "license": "MIT",

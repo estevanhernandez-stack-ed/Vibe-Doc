@@ -274,6 +274,32 @@ as a staging area.
 
 ---
 
+## Update Unified Builder Profile
+
+After any successful generation (single or parallel), update the `plugins.vibe-doc` namespace in `~/.claude/profiles/builder.json` — but **only if the file already exists**.
+
+1. Read `~/.claude/profiles/builder.json`. If it doesn't exist or isn't valid JSON, skip this step.
+2. Read-merge-write: update only `plugins.vibe-doc`, never touch `shared` or other plugin namespaces.
+3. Set/update these fields:
+
+```json
+{
+  "plugins": {
+    "vibe-doc": {
+      "last_generated_docs": ["<docType1>", "<docType2>"],
+      "preferred_tier": "<tier the user chose, if they expressed a preference>",
+      "default_output_format": "<format used, if not 'both'>",
+      "last_updated": "<today's ISO date>"
+    }
+  }
+}
+```
+
+4. Preserve existing fields (`scans_completed`, `last_scan_project`, etc.) — only update what changed.
+5. If the user explicitly stated a preference during the session (e.g., "always generate markdown only" or "I only care about required docs"), capture it so future runs respect it without re-asking.
+
+---
+
 ## When to Fall Back to the Pure Interview Flow
 
 The autonomous-first flow works well for docs whose content lives in the codebase. It works **less well** for docs where the substance is judgment, intent, or future plans — specifically:
