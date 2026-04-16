@@ -8,6 +8,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import { Command } from 'commander';
+import updateNotifier from 'update-notifier';
 import { logger } from './utils/logger';
 import { scan } from './scanner';
 import { readState, writeState, initState } from './state';
@@ -21,7 +22,21 @@ import { extractDataForDocType } from './generator/extractor';
 const program = new Command();
 
 const pkgJsonPath = path.resolve(__dirname, '..', 'package.json');
-const pkgVersion = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf-8')).version;
+const pkgContents = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf-8'));
+const pkgVersion = pkgContents.version;
+
+// Check npm registry for a newer version of vibe-doc once per day.
+// Runs in the background, non-blocking. If a newer version is available,
+// update-notifier prints a boxed message on the NEXT invocation.
+// Respects the NO_UPDATE_NOTIFIER env var and CI environments.
+try {
+  updateNotifier({
+    pkg: { name: pkgContents.name, version: pkgVersion },
+    updateCheckInterval: 1000 * 60 * 60 * 24, // 24 hours
+  }).notify({ defer: true, isGlobal: true });
+} catch {
+  // update-notifier failures should never block CLI usage — silently ignore
+}
 
 program
   .name('vibe-doc')

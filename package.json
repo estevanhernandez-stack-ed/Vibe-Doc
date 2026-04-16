@@ -1,6 +1,6 @@
 {
   "name": "vibe-doc",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Vibe Doc - AI-powered documentation generator for coding artifacts",
   "author": "626Labs LLC",
   "private": true,
