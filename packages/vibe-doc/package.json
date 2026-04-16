@@ -26,10 +26,12 @@
     "dist",
     "skills",
     "commands",
+    "scripts/postinstall.js",
     ".claude-plugin",
     "README.md"
   ],
   "scripts": {
+    "postinstall": "node scripts/postinstall.js",
     "build": "tsc && npm run build:copy-templates",
     "build:copy-templates": "node scripts/copy-templates.js",
     "dev": "tsx watch src/index.ts",

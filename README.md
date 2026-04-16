@@ -34,7 +34,19 @@ The cleanest install. Pulls straight from GitHub, no file download, supports `Sy
 
 Claude Desktop reads `.claude-plugin/marketplace.json` at the repo root and loads the `vibe-doc` plugin from inside `./packages/vibe-doc`. The slash commands (`/scan`, `/generate`, `/check`, `/status`) become available.
 
-### Option 2: Claude Code CLI + terminal CLI — npm
+### Option 2: Claude Code CLI — Plugin manager
+
+Use the built-in plugin manager from any Claude Code CLI or IDE terminal session.
+
+```text
+/plugin marketplace add estevanhernandez-stack-ed/Vibe-Doc
+/plugin install vibe-doc@Vibe-Doc
+/reload-plugins
+```
+
+After reload, type `/` and you'll see the Vibe Doc commands (`/scan`, `/generate`, `/check`, `/status`) in autocomplete. This installs the **plugin only** — for the standalone CLI binary, also install via npm (Option 3).
+
+### Option 3: Claude Code CLI + terminal CLI — npm
 
 The only path that gives you both the Claude Code plugin surface **and** a standalone `vibe-doc` binary you can run from any terminal.
 
@@ -55,7 +67,7 @@ vibe-doc check --threshold 20
 
 The dual-layer design means CI/CD pipelines use the CLI (reproducible, no conversational loop), and interactive sessions use the skills (agent-interviewed, conversational fill).
 
-### Option 3: Claude Desktop — Upload plugin (for local iteration)
+### Option 4: Claude Desktop — Upload plugin (for local iteration)
 
 For testing plugin changes locally before pushing to GitHub.
 
@@ -76,9 +88,10 @@ You can also download a pre-built `.plugin` file from the [GitHub releases page]
 | Situation                                                    | Option                                                        |
 | ------------------------------------------------------------ | ------------------------------------------------------------- |
 | I want to use Vibe Doc conversationally in Claude Desktop    | **Option 1** (Add marketplace)                                |
-| I want the `vibe-doc` CLI available in my terminal / CI / IDE | **Option 2** (npm) — pair with Option 1 for full coverage    |
-| I'm developing or testing plugin changes locally             | **Option 3** (Upload plugin)                                  |
-| I want to install without an internet connection             | **Option 3** — download `.plugin` from releases ahead of time |
+| I use Claude Code CLI or an IDE terminal                     | **Option 2** (Plugin manager)                                 |
+| I want the `vibe-doc` CLI available in my terminal / CI / IDE | **Option 3** (npm) — pair with Option 1 or 2 for full coverage |
+| I'm developing or testing plugin changes locally             | **Option 4** (Upload plugin)                                  |
+| I want to install without an internet connection             | **Option 4** — download `.plugin` from releases ahead of time |
 
 ## Quick Start
 
