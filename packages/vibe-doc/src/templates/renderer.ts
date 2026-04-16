@@ -71,11 +71,6 @@ export function renderTemplate(template: string, data: RenderData): string {
         replacement = userValue;
         confidence = 'high';
         dataSource = 'user';
-      } else if (extractedValue) {
-        // User section can show extracted data as fallback with medium confidence
-        replacement = extractedValue;
-        confidence = 'medium';
-        dataSource = 'extracted';
       } else {
         replacement = '';
         confidence = 'low';

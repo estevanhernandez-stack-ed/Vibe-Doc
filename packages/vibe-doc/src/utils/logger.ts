@@ -14,6 +14,7 @@ interface LogEntry {
 
 class Logger {
   private isDev = process.env.NODE_ENV === 'development';
+  private isVerbose = process.env.VIBE_DOC_VERBOSE === '1' || this.isDev;
 
   private formatTimestamp(): string {
     return new Date().toISOString();
@@ -26,7 +27,9 @@ class Logger {
   }
 
   info(message: string, data?: unknown): void {
-    console.log(this.format('info', message, data));
+    if (this.isVerbose) {
+      console.log(this.format('info', message, data));
+    }
   }
 
   warn(message: string, data?: unknown): void {

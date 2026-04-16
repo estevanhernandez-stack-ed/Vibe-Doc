@@ -18,6 +18,8 @@ import { generateDocument } from './generator';
 import { RenderData, loadTemplate, listTemplates } from './templates';
 import { checkForUpdates, downloadTemplate } from './templates/registry';
 import { extractDataForDocType } from './generator/extractor';
+import * as ui from './utils/ui';
+import ora = require('ora');
 
 const program = new Command();
 
@@ -63,6 +65,7 @@ program
     const confidenceThreshold = parseFloat(options.confidenceThreshold);
 
     try {
+      ui.printBanner(pkgVersion);
       logger.info('Starting vibe-doc scan', { projectPath: resolvedPath });
 
       // Initialize state
@@ -99,15 +102,19 @@ program
       }
 
       // Run scanner
+      const scanSpinner = ora({ text: 'Scanning project artifacts...', color: 'cyan' }).start();
       logger.info('Running artifact inventory scan...');
       state.artifactInventory = await scan(resolvedPath);
+      scanSpinner.succeed(`Scanned ${state.artifactInventory.totalArtifacts} artifacts`);
 
       // Run classifier
+      const classifySpinner = ora({ text: 'Classifying project type...', color: 'cyan' }).start();
       logger.info('Running hybrid classification...');
       const classificationResult = classify(state.artifactInventory, { confidenceThreshold });
 
       if (classificationResult.resolved) {
         state.classification = classificationResult.classification!;
+        classifySpinner.succeed(`Classified: ${state.classification.primaryCategory} (${(state.classification.confidence * 100).toFixed(0)}% confidence)`);
         logger.info('Classification complete', {
           category: state.classification.primaryCategory,
           confidence: state.classification.confidence,
@@ -115,6 +122,7 @@ program
       } else {
         // Low confidence - use best candidate classification with LLM review available
         state.classification = classificationResult.classification!;
+        classifySpinner.warn(`Low-confidence: ${state.classification.primaryCategory} (${(state.classification.confidence * 100).toFixed(0)}%)`);
         logger.info('Low confidence classification, LLM prompt available', {
           category: state.classification.primaryCategory,
           confidence: state.classification.confidence,
@@ -122,8 +130,10 @@ program
       }
 
       // Run gap analyzer
+      const gapSpinner = ora({ text: 'Analyzing documentation gaps...', color: 'cyan' }).start();
       logger.info('Running gap analyzer...');
       state.gapReport = analyzeGaps(state.classification, state.artifactInventory);
+      gapSpinner.succeed(`Gap analysis complete — ${state.gapReport.summary.coveragePercent}% coverage`);
 
       // Save state
       writeState(resolvedPath, state);
@@ -136,15 +146,18 @@ program
       });
 
       // Output summary
-      console.log('\n=== Vibe Doc Scan Complete ===\n');
-      console.log(`Project: ${resolvedPath}`);
-      console.log(`Category: ${state.classification.primaryCategory}`);
-      console.log(`Confidence: ${(state.classification.confidence * 100).toFixed(0)}%`);
-      console.log(`\nDocumentation Coverage: ${state.gapReport.summary.coveragePercent}%`);
-      console.log(`  Covered: ${state.gapReport.summary.docsCovered}`);
-      console.log(`  Partial: ${state.gapReport.summary.docsPartial}`);
-      console.log(`  Missing: ${state.gapReport.summary.docsMissing}`);
-      console.log(`\nState saved to: ${path.join(resolvedPath, '.vibe-doc', 'state.json')}\n`);
+      ui.heading('Scan Complete');
+      ui.label('Project', resolvedPath);
+      ui.label('Category', state.classification.primaryCategory);
+      ui.label('Confidence', `${(state.classification.confidence * 100).toFixed(0)}%`);
+      console.log('');
+      ui.label('Coverage', ui.coverageColor(state.gapReport.summary.coveragePercent));
+      ui.success(`Covered: ${state.gapReport.summary.docsCovered}`);
+      ui.warn(`Partial: ${state.gapReport.summary.docsPartial}`);
+      ui.fail(`Missing: ${state.gapReport.summary.docsMissing}`);
+      console.log('');
+      ui.dim(`State saved to ${path.join(resolvedPath, '.vibe-doc', 'state.json')}`);
+      console.log('');
     } catch (error) {
       logger.error('Scan failed', { error });
       process.exit(1);
@@ -169,10 +182,11 @@ program
         process.exit(1);
       }
 
-      console.log('\n=== Documentation Gap Report ===\n');
-      console.log(`Category: ${state.classification.primaryCategory}`);
-      console.log(`Confidence: ${(state.classification.confidence * 100).toFixed(0)}%`);
-      console.log(`\nGaps by Tier:\n`);
+      ui.printBanner(pkgVersion);
+      ui.heading('Documentation Gap Report');
+      ui.label('Category', state.classification.primaryCategory);
+      ui.label('Confidence', `${(state.classification.confidence * 100).toFixed(0)}%`);
+      console.log('');
 
       const byTier: Record<string, (typeof state.gapReport.gaps)[0][]> = {
         required: [],
@@ -188,19 +202,11 @@ program
       }
 
       for (const tier of ['required', 'recommended', 'optional']) {
-        const gaps = byTier[tier];
-        if (gaps.length > 0) {
-          console.log(`${tier.toUpperCase()}:`);
-          for (const gap of gaps) {
-            const status = gap.found === 0 ? '❌' : gap.missing === 0 ? '✅' : '⚠️';
-            console.log(`  ${status} ${gap.docType}`);
-            console.log(`     ${gap.rationale}`);
-          }
-          console.log();
-        }
+        ui.gapTable(byTier[tier] || [], tier);
       }
 
-      console.log(`Coverage: ${state.gapReport.summary.coveragePercent}%\n`);
+      ui.label('Overall Coverage', ui.coverageColor(state.gapReport.summary.coveragePercent));
+      console.log('');
     } catch (error) {
       logger.error('Report failed', { error });
       process.exit(1);
@@ -224,13 +230,13 @@ program
         return;
       }
 
-      console.log('\n=== Vibe Doc Status ===\n');
-      console.log(`Last scan: ${new Date(state.lastScan).toLocaleString()}`);
-      console.log(`Artifacts: ${state.artifactInventory.totalArtifacts}`);
-      console.log(`Category: ${state.classification.primaryCategory}`);
-      console.log(
-        `Coverage: ${state.gapReport.summary.coveragePercent}% (${state.gapReport.summary.docsCovered} covered, ${state.gapReport.summary.docsMissing} missing)\n`
-      );
+      ui.printBanner(pkgVersion);
+      ui.heading('Vibe Doc Status');
+      ui.label('Last scan', new Date(state.lastScan).toLocaleString());
+      ui.label('Artifacts', String(state.artifactInventory.totalArtifacts));
+      ui.label('Category', state.classification.primaryCategory);
+      ui.label('Coverage', `${ui.coverageColor(state.gapReport.summary.coveragePercent)} (${state.gapReport.summary.docsCovered} covered, ${state.gapReport.summary.docsMissing} missing)`);
+      console.log('');
     } catch (error) {
       logger.error('Status check failed', { error });
       process.exit(1);
@@ -260,10 +266,9 @@ program
         category: state.classification.primaryCategory,
       });
 
-      console.log('\n=== Classification Confirmed ===\n');
-      console.log(
-        `Category "${state.classification.primaryCategory}" has been confirmed by user.\n`
-      );
+      ui.heading('Classification Confirmed');
+      ui.success(`Category "${state.classification.primaryCategory}" has been confirmed by user.`);
+      console.log('');
     } catch (error) {
       logger.error('Confirmation failed', { error });
       process.exit(1);
@@ -285,9 +290,14 @@ program
       const { runCheck } = await import('./checker');
       const result = await runCheck(resolvedPath, { threshold });
 
-      console.log('\n=== Documentation Check ===\n');
-      console.log(result.details);
-      console.log();
+      ui.printBanner(pkgVersion);
+      ui.heading('Documentation Check');
+      if (result.pass) {
+        ui.success(result.details);
+      } else {
+        ui.fail(result.details);
+      }
+      console.log('');
 
       if (!result.pass) {
         process.exit(result.exitCode);
@@ -311,12 +321,13 @@ program
     const format = options.format as 'md' | 'docx' | 'both';
 
     try {
+      ui.printBanner(pkgVersion);
       logger.info('Starting document generation', { docType, format });
 
       // Read state
       const state = readState(resolvedPath);
       if (!state) {
-        console.error('No vibe-doc state found. Run "vibe-doc scan" first.');
+        ui.fail('No vibe-doc state found. Run "vibe-doc scan" first.');
         process.exit(1);
       }
 
@@ -349,21 +360,23 @@ program
       };
 
       // Generate document
+      const genSpinner = ora({ text: `Generating ${docType}...`, color: 'cyan' }).start();
       const result = await generateDocument(docType, resolvedPath, state, renderData, format);
+      genSpinner.succeed(`Generated ${docType} v${result.version}`);
 
       // Save updated state
       writeState(resolvedPath, state);
 
       // Output summary
-      console.log('\n=== Document Generated ===\n');
-      console.log(`Document: ${docType}`);
-      console.log(`Version: ${result.version}`);
-      console.log(`Format(s): ${format}`);
-      console.log(`\nGenerated files:`);
+      ui.heading('Document Generated');
+      ui.label('Document', docType);
+      ui.label('Version', String(result.version));
+      ui.label('Format(s)', format);
+      console.log('');
       for (const filePath of result.paths) {
-        console.log(`  ${filePath}`);
+        ui.filePath(filePath);
       }
-      console.log();
+      console.log('');
     } catch (error) {
       logger.error('Generation failed', { error });
       process.exit(1);
@@ -384,11 +397,12 @@ templatesCmd
       const cacheDir = path.join(process.cwd(), '.vibe-doc');
       const cachedPath = path.join(cacheDir, 'templates');
 
-      console.log('\n=== Available Templates ===\n');
+      ui.printBanner(pkgVersion);
+      ui.heading('Available Templates');
 
-      console.log('EMBEDDED (Built-in):');
+      console.log('  EMBEDDED (Built-in):');
       for (const template of embeddedTemplates) {
-        console.log(`  • ${template}`);
+        ui.success(template);
       }
 
       // Check for cached remote templates
@@ -398,12 +412,14 @@ templatesCmd
         const remoteOnly = cachedTemplates.filter((t) => !embeddedTemplates.includes(t));
 
         if (remoteOnly.length > 0) {
-          console.log('\nREMOTE (Cached):');
+          console.log('');
+          console.log('  REMOTE (Cached):');
           for (const template of remoteOnly) {
-            console.log(`  • ${template}`);
+            ui.success(template);
           }
         }
       }
+      console.log('');
     } catch (error) {
       logger.error('Template list failed', { error });
       process.exit(1);
