@@ -230,6 +230,60 @@ When generating documents, always include source attributions:
 Based on your deployment discussion in CLAUDE.md and CI config analysis...
 ```
 
+## Ecosystem-Aware Composition
+
+Vibe Doc lives in a richer environment than its own skills. The builder may have other plugins, MCPs, or skills installed that overlap with Vibe Doc's phases. **Don't reinvent capabilities the user already has — defer to the specialist when one is present.**
+
+This is Pattern #13 (Ecosystem-Aware Composition) from the Self-Evolving Plugin Framework — the same pattern adopted across all 626Labs Vibe plugins. Vibe Doc's complement table differs from Vibe Cartographer's because Vibe Doc's job is *reading existing artifacts and generating docs*, not designing or building.
+
+### Two layers of discovery
+
+**Layer 1 — Anchored complements (curated table below).** At command start, check the agent's available skills/tools list for any of these known complements. If present, announce the deferral once at the top of the command and hand off the specific phase when you reach it.
+
+**Layer 2 — Live discovery (judgment-based).** Beyond the anchored table, scan the available skills/tools list for unknown-but-useful matches using the heuristics in this section. Be conservative — false positives are more damaging than false negatives.
+
+### Anchored complements table (Vibe-Doc-specific)
+
+| Complement | When it's installed, defer at... | What to say at deferral |
+|------------|-----------------------------------|--------------------------|
+| `context7` MCP (`mcp__context7__*`) | `/generate` for any doc that references libraries, frameworks, APIs, or SDKs (especially README, install-guide, api-spec, deployment-procedure) | "I see `context7` is available — pulling current docs for any libraries referenced in your codebase so the generated docs match the real API surface, not what was true 18 months ago." |
+| `claude_ai_Figma` MCP | `/generate` for design-related docs (when the project has a UI surface and the gap report flags missing design documentation) | "Figma MCP is connected — if your design lives in Figma, drop the file URL and I'll pull screenshots, design tokens, and component structure into the generated docs." |
+| `superpowers:writing-skills` | `/generate` when the project being scanned IS a Claude Code plugin (classification: ClaudeCodePlugin) | "You're documenting a Claude plugin and I see `superpowers:writing-skills` is installed — using it to make sure the generated SKILL/command-reference doc follows the conventions for plugin docs, not generic README patterns." |
+| `superpowers:requesting-code-review` | After `/generate` has produced multiple docs, before the user finalizes them | "Want to run `superpowers:requesting-code-review` over the generated docs before you promote them to the repo root? Catches inconsistencies between docs that I might miss." |
+| `superpowers:verification-before-completion` | `/check` step, before declaring docs CI-ready | "Using `superpowers:verification-before-completion` to make the deployment-readiness check rigorous — actual file existence and freshness, not just my assertion." |
+| `superpowers:dispatching-parallel-agents` | `/generate` multi-doc path (already uses subagents internally; this complement enforces the discipline more rigorously) | "Routing the multi-doc autonomous fill through `superpowers:dispatching-parallel-agents` for cleaner per-doc isolation." |
+| GitHub `gh` CLI | After `/generate` completes — for opening PRs with the generated docs, or for pulling repo metadata (issues, releases, contributors) into changelog/contributing docs | "`gh` CLI is available — when generated docs are ready, I can open a PR with them, or pull recent issues/releases as input for the changelog." |
+
+### Live-discovery heuristics
+
+Beyond the anchored table, scan the available skills/tools list at command start. Surface a complement to the builder if it matches:
+
+- **Documentation-writing skill** (`*doc*`, `*readme*`, `*adr*`, `*spec*`) — relevant during `/generate`
+- **Library/API docs lookup** (`*context*`, `*api-docs*`, `*sdk*`) — relevant during `/generate` for any doc that references external services
+- **Design-context skill or MCP** (Figma, design-system tools) — relevant during `/generate` for design docs
+- **Code-review skill** (`*review*`, `*audit*`, `*lint*`) — relevant after `/generate` completes
+- **Verification skill** (`*verify*`, `*validate*`, `*check*`) — relevant during `/check`
+- **Git/forge automation** (`*github*`, `*git*`, `*pr*`, `*release*`) — relevant after `/generate` for publishing flows
+
+When in doubt, **don't** announce. Only surface a complement when you can articulate the specific doc type or phase it fits and the value it adds.
+
+### Composition rules
+
+- **Defer, don't absorb.** When a complement is invoked, hand off the phase. Resume Vibe Doc's flow once the complement returns. Don't try to wrap or reimplement its behavior.
+- **Announce once, at command start.** Mention all relevant complements in the command's opening — don't pop them up surprise-style mid-generation.
+- **Builder can decline.** "Want me to use `context7` for the library references in the install-guide, or skip it?" The builder is the final arbiter.
+- **Scoped to the relevant doc type.** Don't invoke `claude_ai_Figma` when generating a runbook. Don't invoke `context7` when generating an ADR (the rationale is in commit history, not external docs). Match the complement to the doc type.
+- **Privacy:** Only read what's already in the agent's runtime context (the available skills/tools list). Never enumerate the user's filesystem or Claude config to discover plugins. Never persist the discovered list anywhere durable.
+- **Don't break composition mid-command.** If a complement isn't available mid-flow, fall back to Vibe Doc's own behavior gracefully. Don't error.
+
+### When NOT to defer
+
+- **The classifier and gap analyzer.** These are Vibe Doc's load-bearing logic. Don't defer the *classification decision* to a complement — Vibe Doc owns that. Complements only enrich the *content* of generated docs.
+- **The deterministic CLI scaffold.** `npx vibe-doc generate <type>` produces a known, versioned scaffold. Complements operate *after* the scaffold exists, filling sections — they don't replace the scaffold step.
+- **The "never fabricate" rule.** Even if a complement could plausibly hallucinate something useful, Vibe Doc still requires evidence-based filling with inline source citations. NEEDS INPUT beats confident-but-unsourced content from any complement.
+- **State writes.** `.vibe-doc/state.json` is Vibe Doc's data contract. Complements don't write to it.
+- **Profile writes to `plugins.vibe-doc`.** Vibe Doc's own namespace in the unified profile. Complements don't touch it.
+
 ## Common Workflows
 
 ### Workflow: Scan → Classify → Gap Report
