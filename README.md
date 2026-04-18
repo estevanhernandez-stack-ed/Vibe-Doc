@@ -21,42 +21,33 @@ The dual-layer design means you get intelligent recommendations in conversations
 
 ## Installation
 
-Pick whichever matches how you're running Claude Code. All three lead to the same plugin working.
+Vibe Doc lives inside the **Vibe Plugins** marketplace alongside Vibe Cartographer and Vibe Test. One marketplace add gives you all three.
 
-### Option 1: Claude Desktop — Add marketplace (recommended)
+**Claude Desktop / Cowork (UI):**
 
-The cleanest install. Pulls straight from GitHub, no file download, supports `Sync` to update.
-
-1. Open Claude Desktop → **Personal plugins** panel
-2. Click the **+** button → **Add marketplace**
-3. Enter: `estevanhernandez-stack-ed/Vibe-Doc`
-4. Click **Sync**
-
-Claude Desktop reads `.claude-plugin/marketplace.json` at the repo root and loads the `vibe-doc` plugin from inside `./packages/vibe-doc`. The slash commands (`/scan`, `/generate`, `/check`, `/status`) become available.
-
-### Option 2: Claude Code CLI — Plugin manager
-
-Use the built-in plugin manager from any Claude Code CLI or IDE terminal session.
+Open **Personal plugins** → click **+** → **Add marketplace** → enter:
 
 ```text
-/plugin marketplace add estevanhernandez-stack-ed/Vibe-Doc
-/plugin install vibe-doc@Vibe-Doc
-/reload-plugins
+estevanhernandez-stack-ed/vibe-plugins
 ```
 
-After reload, type `/` and you'll see the Vibe Doc commands (`/scan`, `/generate`, `/check`, `/status`) in autocomplete. This installs the **plugin only** — for the standalone CLI binary, also install via npm (Option 3).
+Click **Sync**. Install Vibe Doc from the picker. Slash commands (`/scan`, `/generate`, `/check`, `/status`) become available in your sessions.
 
-### Option 3: Claude Code CLI + terminal CLI — npm
+**Claude Code CLI:**
 
-The only path that gives you both the Claude Code plugin surface **and** a standalone `vibe-doc` binary you can run from any terminal.
+```text
+/plugin marketplace add estevanhernandez-stack-ed/vibe-plugins
+/plugin install vibe-doc@vibe-plugins
+```
+
+**npm (CLI binary for terminal / CI):**
 
 ```bash
 npm install -g @esthernandez/vibe-doc
 vibe-doc --version
-# 0.3.0
 ```
 
-Now you can run Vibe Doc either conversationally via Claude Code slash commands (install Option 1 alongside this), or deterministically from any shell:
+The npm install gets you the standalone `vibe-doc` binary for any shell — pair it with the marketplace install above if you also want the conversational slash commands.
 
 ```bash
 cd ~/Projects/my-app
@@ -65,33 +56,9 @@ vibe-doc generate adr
 vibe-doc check --threshold 20
 ```
 
-The dual-layer design means CI/CD pipelines use the CLI (reproducible, no conversational loop), and interactive sessions use the skills (agent-interviewed, conversational fill).
+The dual-layer design: CI/CD pipelines use the CLI (reproducible, no conversational loop), interactive sessions use the skills (agent-interviewed, conversational fill).
 
-### Option 4: Claude Desktop — Upload plugin (for local iteration)
-
-For testing plugin changes locally before pushing to GitHub.
-
-1. Clone the repo: `git clone https://github.com/estevanhernandez-stack-ed/Vibe-Doc`
-2. Build a `.plugin` bundle:
-
-   ```bash
-   python scripts/build-plugin.py
-   ```
-
-   This writes `bundles/vibe-doc-<version>.plugin` — a zip archive Cowork accepts directly. The script excludes `dist/`, `node_modules/`, and other runtime artifacts per Cowork's plugin spec.
-3. In Claude Desktop → **Personal plugins** → **+** → **Upload plugin**, pick the `.plugin` file.
-
-You can also download a pre-built `.plugin` file from the [GitHub releases page](https://github.com/estevanhernandez-stack-ed/Vibe-Doc/releases) — each tagged release ships a ready-to-upload asset.
-
-### Which option should I use?
-
-| Situation                                                    | Option                                                        |
-| ------------------------------------------------------------ | ------------------------------------------------------------- |
-| I want to use Vibe Doc conversationally in Claude Desktop    | **Option 1** (Add marketplace)                                |
-| I use Claude Code CLI or an IDE terminal                     | **Option 2** (Plugin manager)                                 |
-| I want the `vibe-doc` CLI available in my terminal / CI / IDE | **Option 3** (npm) — pair with Option 1 or 2 for full coverage |
-| I'm developing or testing plugin changes locally             | **Option 4** (Upload plugin)                                  |
-| I want to install without an internet connection             | **Option 4** — download `.plugin` from releases ahead of time |
+> **Note on `.plugin` upload:** Cowork's "Upload plugin" path is currently unstable for our bundles — we recommend the marketplace install above. We're tracking the issue.
 
 ## Quick Start
 
