@@ -1,5 +1,45 @@
 # Process Notes — Vibe Coding Artifacts Plugin
 
+## /evolve port — 2026-04-28 (autonomous Cart use)
+
+**Date:** 2026-04-28T16:25 CST
+**Mode:** Builder, autonomous (no per-step checkpoints)
+**Persona:** The Architect (from `~/.claude/CLAUDE.md`)
+**Trigger:** v0.6.0 just shipped after triaging proposed-changes.md manually. Finding #11 (the `/evolve` build itself) was explicitly deferred to a separate session. Este: "How about you autonomously use Vibe Cartographer to port it from cartographer that'll be a new stretch for vibe cartographer and so meta it's not even funny."
+
+**Posture:** Cart's planning chain (scope → spec → checklist → build → reflect) compressed into one doc at `docs/evolve-build.md` because this is a port, not a greenfield design. Cart's reference SKILLs at `C:\Users\estev\Projects\app-readinessplugin\plugins\vibe-cartographer\skills\` are the source of truth — adapt namespace, drop `mode`, drop `last_seen_complements` for v1.
+
+### Load-bearing decisions
+- One combined planning doc instead of four (scope/prd/spec/checklist) because the requirements are derivative — we're porting an existing pattern, not designing from scratch.
+- `mode` field dropped from session-log schema (vibe-doc has no learner/builder dichotomy).
+- `last_seen_complements` snapshot deferred — Cart-specific telemetry, not load-bearing for v0.7.0 ship.
+- Friction calibration (Cart 1.5) deferred — second JSONL stream + `/reflect`-time UI is its own scope.
+- `/check` gets no friction surface in v0.7.0 — pass/fail CI command, no interactive friction.
+- Atomic scripts ported verbatim (no plugin-name coupling in their interface).
+
+### What landed
+- 2 zero-dep helper scripts: `scripts/atomic-append-jsonl.js`, `scripts/atomic-write-json.js`.
+- 2 JSON Schemas: `skills/guide/schemas/{friction,session-log}.schema.json`.
+- 1 trigger map: `skills/guide/references/friction-triggers.md` scoped to scan/generate/check (and self-reference for /evolve).
+- 3 new SKILLs: `skills/{friction-logger,session-logger,evolve}/SKILL.md`.
+- 1 new slash command: `commands/evolve.md`.
+- Wired session+friction logging into `skills/{scan,generate}/SKILL.md` (Session Logging + Friction Logging sections at the top of each).
+- `/check` left untouched (no friction surface in v0.7.0 by design — pass/fail CI command).
+- `package.json` `files` array now includes both atomic scripts so they ship via npm.
+- CLAUDE.md updated: file map gets the new SKILLs + scripts + schemas + friction-triggers entries; framework section gets the v0.7.0 reflective-loop note.
+- SKILLS_README.md updated: new section per added SKILL.
+
+### Build status
+- `npm run type-check` — clean (no source changes, just SKILL/markdown/JSON additions).
+- `npm run build` — clean. dist/ regenerated. 11 templates copied.
+
+### Outcome
+- Versions bumped 0.6.0 → 0.7.0 in both `packages/vibe-doc/package.json` and `packages/vibe-doc/.claude-plugin/plugin.json`.
+- Commit pending. Publish pending.
+
+### Friction notes (Cart-style, this session)
+- None. Autonomous run, no checkpoints, no pushback. Pre-vetted-flow rhythm from MEMORY held.
+
 ## Onboard
 
 **Technical experience:** Experienced full-stack developer. Very comfortable with plugin/skill building — has shipped multiple Cowork plugins, MCP servers, and agent workflows. No hand-holding needed on toolchain or patterns.

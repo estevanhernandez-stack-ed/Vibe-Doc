@@ -8,17 +8,27 @@ Complete skill definitions for the Vibe Doc Cowork/Claude Code plugin. All SKILL
 vibe-doc/
 ├── skills/
 │   ├── scan/
-│   │   └── SKILL.md              (216 lines) — Scan & classify pipeline
+│   │   └── SKILL.md              — Scan & classify pipeline (user-facing)
 │   ├── generate/
-│   │   └── SKILL.md              (387 lines) — Document generation pipeline
+│   │   └── SKILL.md              — Document generation pipeline (user-facing)
 │   ├── check/
-│   │   └── SKILL.md              (298 lines) — CI validation skill
+│   │   └── SKILL.md              — CI validation skill (user-facing)
+│   ├── evolve/
+│   │   └── SKILL.md              — Reflective L3 self-improvement loop (user-facing, v0.7.0+)
+│   ├── friction-logger/
+│   │   └── SKILL.md              — Append-only friction capture (internal, v0.7.0+)
+│   ├── session-logger/
+│   │   └── SKILL.md              — Two-phase session log: sentinel + terminal (internal, v0.7.0+)
 │   └── guide/
-│       ├── SKILL.md              (212 lines) — Shared behavior guide (internal reference)
-│       └── references/
-│           ├── classification-taxonomy.md     (348 lines) — 7 categories × 5 contexts
-│           ├── documentation-matrix.md        (256 lines) — Tier mapping
-│           └── breadcrumb-heuristics.md       (441 lines) — Extraction strategies & questions
+│       ├── SKILL.md              — Shared behavior guide (internal reference)
+│       ├── references/
+│       │   ├── classification-taxonomy.md     — 7 categories × 5 contexts
+│       │   ├── documentation-matrix.md        — Tier mapping
+│       │   ├── breadcrumb-heuristics.md       — Extraction strategies & questions
+│       │   └── friction-triggers.md           — Per-command trigger map (v0.7.0+)
+│       └── schemas/
+│           ├── friction.schema.json           — JSON Schema for friction.jsonl entries (v0.7.0+)
+│           └── session-log.schema.json        — JSON Schema for sessions/*.jsonl entries (v0.7.0+)
 └── SKILLS_README.md              (this file)
 ```
 
@@ -64,7 +74,39 @@ Simple pipeline:
 
 Designed to be CI-safe (no prompts, exit codes).
 
-### 4. Guide (`skills/guide/SKILL.md`)
+### 4. Evolve (`skills/evolve/SKILL.md`)
+**User-facing, reflective L3 self-improvement loop. Added in v0.7.0.**
+
+Pipeline:
+1. Read session logs from `~/.claude/plugins/data/vibe-doc/sessions/`
+2. Read friction.jsonl
+3. Weight findings (high=1.0, medium=0.6, low=0.3) with Pattern #14 absence-of-friction inference
+4. Surface 2–5 patterns, classify each into Plugin / Personal / Community track
+5. Propose concrete diffs against vibe-doc's own SKILLs / classifier / matrix
+6. Apply on `[apply]`, never auto-merge
+7. Append run summary as a new section to `packages/vibe-doc/proposed-changes.md`
+
+Implements Pattern #10 (Agent-Authored Changelog) of the Self-Evolving Plugin Framework.
+
+### 5. Friction-logger (`skills/friction-logger/SKILL.md`)
+**Internal SKILL, NOT user-invocable. Added in v0.7.0.**
+
+Two procedures:
+- `log(entry)` — append a friction entry to `~/.claude/plugins/data/vibe-doc/friction.jsonl`. Schema-validated, silent-drop on failure (defensive default).
+- `detect_orphans()` — scan 7 days of session logs for sentinels without matching terminals. Convert each to a `command_abandoned` friction entry.
+
+Invoked by every command SKILL at the trigger points listed in `skills/guide/references/friction-triggers.md`.
+
+### 6. Session-logger (`skills/session-logger/SKILL.md`)
+**Internal SKILL, NOT user-invocable. Added in v0.7.0.**
+
+Two procedures:
+- `start(command, project_dir)` — write a sentinel entry (`outcome: "in_progress"`) to today's session file. Returns the sessionUUID.
+- `end(entry)` — write a terminal entry with the same sessionUUID and the actual outcome.
+
+Sentinel + terminal pairing enables `friction-logger.detect_orphans()` to identify abandoned commands.
+
+### 7. Guide (`skills/guide/SKILL.md`)
 **Internal reference, NOT user-invocable.**
 
 Defines shared behavior for all skills:

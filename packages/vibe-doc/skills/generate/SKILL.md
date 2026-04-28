@@ -16,6 +16,25 @@ Autonomous-first pipeline: read the project, fill what you can, then ask the use
 
 **Shared behavior:** Read `skills/guide/SKILL.md` for state management, CLI patterns, checkpoints, and output formatting.
 
+## Session Logging
+
+At command start — before reading state.json or any project files — call `session-logger.start("generate", <project_dir>)` (see `../session-logger/SKILL.md`) to get the sessionUUID. Hold it in memory for the duration of this command. Pass it to every `friction-logger.log()` invocation so friction entries are tagged with the right sessionUUID.
+
+At command end — after the generated doc has been written to disk and the user has either accepted the result or moved on — call `session-logger.end(entry)` with the **same sessionUUID** returned by `start()`. Set `outcome: "completed"` if the doc generated and was accepted, `"partial"` if it generated but the user exited before review, `"abandoned"` only if the command exited before any generation. Populate `friction_notes`, `key_decisions` (e.g., "picked Required tier first", "skipped intake questions for sections agent had high confidence on"), `artifact_generated: <path-to-the-doc>`, and `complements_invoked` from what actually happened (especially `context7:*` calls).
+
+## Friction Logging
+
+Reference: `../guide/references/friction-triggers.md` — section `/generate`. Invoke `friction-logger.log()` at exactly these triggers, with exactly these confidence levels:
+
+- **User declines a Pattern #13 complement offer** (typically `context7` for library/API references inside generated docs) → `friction_type: "complement_rejected"`, `confidence: "high"`. Set `complement_involved`.
+- **User overrides the recommended doc-tier focus** (asks for an Optional doc when Required tier still has unmet gaps) → `friction_type: "default_overridden"`, `confidence: "medium"`. Quote the recommendation and the override in `symptom`.
+- **User rewrites >50% of a generated doc within the same session** (line diff between agent-generated and user-final version) → `friction_type: "artifact_rewritten"`, `confidence: "medium"`. Generate artifacts are user-shaped by nature.
+- **User skips Required-tier gaps and goes straight to Optional** → `friction_type: "sequence_revised"`, `confidence: "low"`. Tier-skip is a soft default.
+
+Universal triggers (`repeat_question`, `rephrase_requested`) also apply — honor the **defensive default**: without a quoted prior turn in `symptom`, do not log.
+
+Every `log()` call passes the sessionUUID returned by `session-logger.start()` at the top of this command so entries cluster under this run.
+
 ---
 
 ## Design Intent

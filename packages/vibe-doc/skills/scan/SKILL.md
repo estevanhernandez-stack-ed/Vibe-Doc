@@ -13,6 +13,25 @@ Conversational pipeline to scan a project, classify its type, and produce a docu
 
 **Shared behavior:** Read `skills/guide/SKILL.md` for state management, CLI patterns, checkpoints, and output formatting.
 
+## Session Logging
+
+At command start — before the entry gate prompt — call `session-logger.start("scan", <project_dir>)` (see `../session-logger/SKILL.md`) to get the sessionUUID. Hold it in memory for the duration of this command. Pass it to every `friction-logger.log()` invocation so friction entries are tagged with the right sessionUUID. Then call `friction-logger.detect_orphans()` once to convert any backlog of abandoned commands into friction entries.
+
+At command end — after the gap report has been presented and the user has either chosen a next step or the unified profile write completed — call `session-logger.end(entry)` with the **same sessionUUID** returned by `start()`. Set `outcome: "completed"` if the full flow ran, `"partial"` if the user exited mid-flow but the scan completed, `"abandoned"` only if the command exited before the scan ran. Populate `friction_notes`, `key_decisions` (e.g., "chose Path A intake", "confirmed ClaudeCodePlugin classification"), `artifact_generated: ".vibe-doc/state.json"`, and `complements_invoked` from what actually happened.
+
+## Friction Logging
+
+Reference: `../guide/references/friction-triggers.md` — section `/scan`. Invoke `friction-logger.log()` at exactly these triggers, with exactly these confidence levels:
+
+- **User declines a Pattern #13 complement offer** (e.g., `context7` for tech-stack lookups during classification) → `friction_type: "complement_rejected"`, `confidence: "high"`. Set `complement_involved`.
+- **User chooses Path B** when classification confidence ends up `< 0.85` → `friction_type: "default_overridden"`, `confidence: "medium"`. Quote the path-decision phrasing in `symptom`.
+- **User overrides the auto-classification at the confirmation checkpoint** → `friction_type: "artifact_rewritten"`, `confidence: "high"`. Capture the agent's pick and the user's pick in `symptom`.
+- **User runs `/generate` or `/check` from the same project before this scan's terminal entry lands** → caught at next-command time as `sequence_revised`, `confidence: "medium"`. The `/scan` SKILL itself doesn't log this; the next command detects an orphan-followed-by-different-command pattern.
+
+Universal triggers (`repeat_question`, `rephrase_requested`) also apply — honor the **defensive default**: without a quoted prior turn in `symptom`, do not log.
+
+Every `log()` call passes the sessionUUID returned by `session-logger.start()` at the top of this command so entries cluster under this run.
+
 ---
 
 ## Conversational Flow

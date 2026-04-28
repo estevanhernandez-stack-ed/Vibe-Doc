@@ -20,8 +20,11 @@ Canonical brand spec lives at `~/.claude/skills/626labs-design/` (globally avail
 | `packages/vibe-doc/` | The single npm workspace. Ships both ways — npm CLI and Claude plugin from one tree. |
 | `packages/vibe-doc/src/` | TypeScript source for the CLI. Pipeline modules: `scanner/`, `classifier/`, `gap-analyzer/`, `generator/`, `checker/`, plus `state/`, `templates/`, `versioning/`, `utils/`. |
 | `packages/vibe-doc/src/index.ts` | Commander entry point. Wires every subcommand. |
-| `packages/vibe-doc/skills/` | Plugin skills — `scan/`, `generate/`, `check/`, `guide/` (internal). Each is a SKILL.md + optional `references/`. |
-| `packages/vibe-doc/commands/` | Slash command markdown — one file per `/scan`, `/generate`, `/check`, `/status`. |
+| `packages/vibe-doc/skills/` | Plugin skills — `scan/`, `generate/`, `check/`, `evolve/` (user-facing); `friction-logger/`, `session-logger/`, `guide/` (internal). Each is a SKILL.md + optional `references/` and `schemas/`. |
+| `packages/vibe-doc/skills/guide/schemas/` | JSON Schema Draft-07 schemas — `friction.schema.json` (friction.jsonl entries), `session-log.schema.json` (sessions/*.jsonl entries). |
+| `packages/vibe-doc/skills/guide/references/friction-triggers.md` | Per-command trigger map — when each command should call `friction-logger.log()` and at what confidence. |
+| `packages/vibe-doc/scripts/atomic-append-jsonl.js`, `atomic-write-json.js` | Zero-dep Node helpers for append-only JSONL writes and atomic-rename JSON writes. Used by friction-logger and session-logger. |
+| `packages/vibe-doc/commands/` | Slash command markdown — one file per `/scan`, `/generate`, `/check`, `/evolve`, `/status`. |
 | `packages/vibe-doc/.claude-plugin/plugin.json` | Plugin manifest (name, version, description). Version must match `packages/vibe-doc/package.json`. |
 | `packages/vibe-doc/scripts/` | `copy-templates.js` (build-time, runs after `tsc`) and `postinstall.js` (onboarding nudge after npm install). |
 | `packages/vibe-doc/README.md` | The npm-shipped README — what users see on npmjs.com. |
@@ -52,6 +55,8 @@ Vibe Doc is a **dual-layer** plugin: the same classification engine and template
 
 **Self-Evolving Plugin Framework integration:** Vibe Doc reads `~/.claude/profiles/builder.json` (the unified builder profile) to calibrate tone and depth, writes only to its own `plugins.vibe-doc` namespace, and emits a `proposed-changes.md` from its own reflective loop. See `docs/self-evolving-plugins-framework.md` for the 12-pattern catalog.
 
+**Reflective loop (v0.7.0+):** `/vibe-doc:evolve` reads session logs at `~/.claude/plugins/data/vibe-doc/sessions/<date>.jsonl` and friction signals at `~/.claude/plugins/data/vibe-doc/friction.jsonl`, weights findings via Pattern #14 absence-of-friction inference, and appends triaged proposals as a new section in `packages/vibe-doc/proposed-changes.md`. Nothing auto-applies. The `friction-logger` and `session-logger` internal SKILLs implement Pattern #6 (Friction Log) and Level 2 (session memory) of the framework.
+
 ## Common tasks
 
 | You want to… | Path / command |
@@ -65,6 +70,8 @@ Vibe Doc is a **dual-layer** plugin: the same classification engine and template
 | Edit a skill | `packages/vibe-doc/skills/{scan,generate,check}/SKILL.md` — agent reads these directly |
 | Edit the classification matrix | `packages/vibe-doc/skills/guide/references/documentation-matrix.md` (load-bearing — this is the thesis core) |
 | Edit a slash command | `packages/vibe-doc/commands/<name>.md` |
+| Edit a friction trigger | `packages/vibe-doc/skills/guide/references/friction-triggers.md` (and pair with the matching `friction-logger.log()` call in the command SKILL) |
+| Edit the friction or session-log shape | `packages/vibe-doc/skills/guide/schemas/{friction,session-log}.schema.json` (load-bearing — bump `schema_version` if breaking) |
 | Edit the GitHub Action | `action/action.yml` |
 | Run the ecosystem stats script | `python scripts/stats.py` |
 
