@@ -64,7 +64,7 @@ const BASE_MATRIX: Record<DocType, Record<string, Tier>> = {
     MobileApplication: Tier.Required,
     AIMLSystem: Tier.Required,
     IntegrationConnector: Tier.Recommended,
-    ClaudeCodePlugin: Tier.Optional,
+    ClaudeCodePlugin: Tier.Recommended,
   },
   [DocType.APISpec]: {
     WebApplication: Tier.Required,
@@ -186,6 +186,28 @@ export function getRequiredDocs(
     if (contexts.includes('MultiTenant')) {
       // MultiTenant requires security and data model docs
       if (docType === DocType.ThreatModel || docType === DocType.DataModel) {
+        tier = Tier.Required;
+      }
+    }
+
+    if (contexts.includes('PublicOpenSource')) {
+      // Publicly distributed plugins create a malicious-fork attack surface:
+      // anyone can plant prompt-injection in a SKILL.md and ride the
+      // marketplace channel back to users. Threat-model AND runbook
+      // (release / deprecation / malicious-version response) become Required
+      // regardless of category baseline.
+      if (docType === DocType.ThreatModel || docType === DocType.Runbook) {
+        tier = Tier.Required;
+      }
+    }
+
+    if (contexts.includes('AggregatedMarketplace')) {
+      // For aggregated marketplaces (marketplace.json with multiple plugins[]
+      // entries), marketplace.json IS the api-spec — the structural contract
+      // between marketplace host and plugin consumers. Elevates api-spec
+      // from Optional → Required so a missing/malformed manifest is flagged
+      // as a deployment blocker.
+      if (docType === DocType.APISpec) {
         tier = Tier.Required;
       }
     }

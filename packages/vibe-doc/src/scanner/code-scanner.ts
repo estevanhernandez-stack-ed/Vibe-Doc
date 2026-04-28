@@ -14,7 +14,32 @@ export interface CodeStructure {
 }
 
 async function findPackageConfigs(projectPath: string): Promise<string[]> {
-  const cfgs = await glob(['package.json', 'pyproject.toml', 'Cargo.toml', 'go.mod'], { cwd: projectPath });
+  const cfgs = await glob(
+    [
+      '**/package.json',
+      '**/pyproject.toml',
+      '**/setup.py',
+      '**/Cargo.toml',
+      '**/go.mod',
+      '**/pom.xml',
+      '**/build.gradle',
+      '**/build.gradle.kts',
+      '**/*.csproj',
+      '**/Gemfile',
+      '**/composer.json',
+    ],
+    {
+      cwd: projectPath,
+      ignore: [
+        '**/node_modules/**',
+        '**/.git/**',
+        '**/dist/**',
+        '**/build/**',
+        '**/target/**',
+        '**/vendor/**',
+      ],
+    }
+  );
   return cfgs.map(c => path.join(projectPath, c)).filter(c => fs.existsSync(c));
 }
 

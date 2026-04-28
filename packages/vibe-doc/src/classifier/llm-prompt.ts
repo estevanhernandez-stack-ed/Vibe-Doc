@@ -56,6 +56,8 @@ Identify applicable contexts (can select multiple):
 - **InternalTooling**: Internal tools, admin dashboards, support systems
 - **MultiTenant**: Serves multiple independent customers/tenants
 - **EdgeEmbedded**: Runs on edge devices, embedded systems, or IoT
+- **AggregatedMarketplace**: A marketplace.json-backed plugin marketplace (multiple plugins listed in plugins[]); marketplace.json IS the api-spec for this shape
+- **PublicOpenSource**: Publicly distributed open-source plugin (LICENSE + .claude-plugin manifest); elevates threat-model and runbook because anyone can fork and ride the distribution channel back to users
 
 ## Your Response
 

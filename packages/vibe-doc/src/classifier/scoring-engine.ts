@@ -23,6 +23,8 @@ export enum Context {
   InternalTooling = 'InternalTooling',
   MultiTenant = 'MultiTenant',
   EdgeEmbedded = 'EdgeEmbedded',
+  AggregatedMarketplace = 'AggregatedMarketplace',
+  PublicOpenSource = 'PublicOpenSource',
 }
 
 export interface CategoryScore {
@@ -228,6 +230,11 @@ export function scoreClassification(
 
       case 'has-claude-marketplace':
         categoryScores[Category.ClaudeCodePlugin] += 10 * w;
+        contextScores[Context.AggregatedMarketplace] += 5 * w;
+        break;
+
+      case 'has-public-open-source':
+        contextScores[Context.PublicOpenSource] += 4 * w;
         break;
 
       default:

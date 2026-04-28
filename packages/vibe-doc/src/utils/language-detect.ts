@@ -3,6 +3,8 @@
  * Detects programming languages based on package configuration files
  */
 
+import * as path from 'path';
+
 export interface DetectedLanguage {
   name: string;
   confidence: number;
@@ -18,7 +20,7 @@ export function detectLanguages(
   const languageMap: Map<string, number> = new Map();
 
   for (const filePath of packageConfigPaths) {
-    const fileName = filePath.split('/').pop() || '';
+    const fileName = path.basename(filePath);
 
     // Node.js/TypeScript
     if (fileName === 'package.json') {

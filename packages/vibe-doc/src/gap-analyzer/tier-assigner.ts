@@ -49,7 +49,7 @@ export function assessGaps(
       artifactsScanned,
       found,
       missing,
-      rationale: buildGapRationale(req.tier, found, missing),
+      rationale: buildGapRationale(req.tier, found, missing, breadcrumb),
     };
 
     gaps.push(gap);
@@ -141,10 +141,19 @@ function patternToRegex(pattern: string): RegExp {
 /**
  * Build a rationale for the gap
  */
-function buildGapRationale(tier: Tier, found: number, missing: number): string {
+function buildGapRationale(
+  tier: Tier,
+  found: number,
+  missing: number,
+  breadcrumb?: Breadcrumb
+): string {
   const tierLabel = tier.charAt(0).toUpperCase() + tier.slice(1);
 
   if (found === 0) {
+    if (breadcrumb && breadcrumb.filePatterns.length > 0) {
+      const examples = breadcrumb.filePatterns.slice(0, 3).join(', ');
+      return `${tierLabel}: No evidence found. Expected dedicated file at: ${examples}.`;
+    }
     return `${tierLabel}: No evidence found in codebase.`;
   }
 

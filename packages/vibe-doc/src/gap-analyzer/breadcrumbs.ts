@@ -150,6 +150,10 @@ export function getBreadcrumbs(docType: string): Breadcrumb {
         '**/openapi.yaml',
         '**/docs/api/**',
         '**/API*.md',
+        // For Claude Code plugin marketplaces, marketplace.json is the
+        // structural API spec — the contract between marketplace host
+        // and plugin consumers.
+        '**/.claude-plugin/marketplace.json',
       ],
       gitPatterns: ['api:', 'endpoint:'],
       codePatterns: [
@@ -333,6 +337,11 @@ export function getBreadcrumbs(docType: string): Breadcrumb {
     'install-guide': {
       docType: 'install-guide',
       keywords: ['install', 'setup', 'getting-started'],
+      // Strict file-name match: vibe-doc expects a dedicated INSTALL.md (or
+      // docs/install*, docs/setup*, docs/getting-started*). README sections
+      // titled "## Install" are NOT counted as evidence — promoting install
+      // content into a dedicated file matches the 626Labs convention and
+      // mirrors what /generate emits for this doc type.
       filePatterns: [
         '**/INSTALL.md',
         '**/INSTALLATION.md',

@@ -82,6 +82,28 @@ export function classify(
   };
 }
 
+const SECONDARY_RATIO_THRESHOLD = 0.3;
+
+/**
+ * Pick a secondary category only when it's substantively close to primary.
+ * Universal-floor signals (has-tests, has-dockerfile, has-e2e-testing) give
+ * every category a small baseline score; reporting whatever lands second
+ * surfaces confidently-wrong secondaries (e.g., WebApplication on a pure
+ * plugin repo where primary scores 30+ and secondary scores 1.5 from
+ * floors alone). Threshold: secondary needs >= 30% of primary's score
+ * AND a positive absolute score to be reported.
+ */
+function pickSecondary(
+  primary: { category: string; score: number },
+  candidates: Array<{ category: string; score: number }>
+): { category: string; score: number } | null {
+  if (candidates.length < 2) return null;
+  const candidate = candidates[1];
+  if (candidate.score <= 0 || primary.score <= 0) return null;
+  if (candidate.score / primary.score < SECONDARY_RATIO_THRESHOLD) return null;
+  return candidate;
+}
+
 /**
  * Build a Classification object from scoring results
  */
@@ -90,8 +112,7 @@ function buildClassification(
   inventory: ArtifactInventory
 ): Classification {
   const topCategory = ruleResults.categories[0];
-  const secondaryCategory =
-    ruleResults.categories.length > 1 ? ruleResults.categories[1] : null;
+  const secondaryCategory = pickSecondary(topCategory, ruleResults.categories);
 
   const contexts = ruleResults.contexts.map((c) => c.context);
 
@@ -121,8 +142,7 @@ function buildLowConfidenceClassification(
   inventory: ArtifactInventory
 ): Classification {
   const topCategory = ruleResults.categories[0];
-  const secondaryCategory =
-    ruleResults.categories.length > 1 ? ruleResults.categories[1] : null;
+  const secondaryCategory = pickSecondary(topCategory, ruleResults.categories);
 
   const contexts = ruleResults.contexts.map((c) => c.context);
 

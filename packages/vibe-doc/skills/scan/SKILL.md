@@ -47,10 +47,10 @@ If user chooses context, run a focused interview. Max 6 questions. Save answers 
 **Questions to ask (in this order):**
 
 1. **Project name & description** → "What's your project called, and what does it do in one sentence?"
-2. **Primary purpose** → "Is this primarily a web app, API, data pipeline, infrastructure, mobile app, AI/ML system, or integration? Or something else?"
+2. **Primary purpose** → "Is this primarily a web app, API, data pipeline, infrastructure, mobile app, AI/ML system, integration, or Claude Code plugin / agent extension / developer tool? Or something else?"
 3. **Deployment target** → "Where does this run? (Cloud provider, on-prem, edge, customer infrastructure?)"
 4. **Users & compliance** → "Who uses this? (Internal team, customers, public?) Any regulatory requirements? (HIPAA, SOC2, PCI, etc.)"
-5. **Architecture style** → "Monolith, microservices, serverless, or hybrid?"
+5. **Architecture style** → "Monolith, microservices, serverless, hybrid, or plugin marketplace / extension ecosystem?"
 6. **Team context** → "Solo dev or team? Any deployments soon?"
 
 **After collecting answers:**
@@ -66,13 +66,34 @@ Got it. Here's what I heard:
 I'll use this context when scanning your artifacts.
 ```
 
-Save this profile. Then proceed to step 3 (Run Scan).
+**Save the profile to `<project-path>/.vibe-doc/intake-profile.json`** so the CLI can read it via `--profile`. Use the Write tool. Create `.vibe-doc/` first if it doesn't exist. Shape:
+
+```json
+{
+  "projectName": "<from Q1>",
+  "projectDescription": "<from Q1>",
+  "mainPurpose": "<from Q2>",
+  "primaryUsers": "<from Q4>",
+  "coreFeatures": [],
+  "technologies": [],
+  "deploymentModel": "<from Q3>",
+  "architectureStyle": "<from Q5>"
+}
+```
+
+Then proceed to step 3 (Run Scan).
 
 ---
 
 ### 3. Run Scan — Artifact Inventory
 
-Execute the scan command:
+Execute the scan command. **If the user chose Path A**, pass the saved profile so intake answers reach the state writer:
+
+```bash
+cd <project-path> && npx vibe-doc scan . --profile .vibe-doc/intake-profile.json
+```
+
+**If the user chose Path B (cold start)**, omit `--profile`:
 
 ```bash
 cd <project-path> && npx vibe-doc scan .

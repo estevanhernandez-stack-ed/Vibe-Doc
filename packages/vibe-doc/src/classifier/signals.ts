@@ -416,6 +416,26 @@ export function extractSignals(inventory: ArtifactInventory): Signal[] {
     });
   }
 
+  // Public open-source distribution: LICENSE + Claude plugin shape.
+  // Compound on purpose — a LICENSE alone fires on nearly every repo, which
+  // would over-trigger PublicOpenSource. Pairing with a plugin manifest or
+  // marketplace.json scopes the signal to the case the finding cares about:
+  // publicly distributable Claude Code plugins (MIT-licensed, npm-published,
+  // marketplace-listed) where threat-model and runbook tiers should elevate.
+  const hasLicense = /(^|\|)[^|]*\/(license|copying)(\.[a-z]+)?(\||$)/i.test(allFiles);
+  const hasClaudePluginShape =
+    configFiles.includes('.claude-plugin/plugin.json') ||
+    configFiles.includes('.claude-plugin/marketplace.json') ||
+    allFiles.includes('.claude-plugin/plugin.json') ||
+    allFiles.includes('.claude-plugin/marketplace.json');
+  if (hasLicense && hasClaudePluginShape) {
+    signals.push({
+      name: 'has-public-open-source',
+      source: 'file-scanner',
+      weight: 4,
+    });
+  }
+
   logger.debug(`Extracted ${signals.length} signals from inventory`);
   return signals;
 }

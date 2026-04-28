@@ -97,11 +97,10 @@ export async function scanGit(projectPath: string): Promise<GitStats> {
     const totalCommits = log.total || 0;
     logger.debug('Total commits', { count: totalCommits });
 
-    // Get unique contributors
-    const logWithAuthor = await git.log(['--format=%an']);
-    const authors = logWithAuthor.all
-      .map((commit) => commit.message)
-      .filter((author) => author.length > 0);
+    // Get unique contributors from the log we already fetched (author_name is the canonical field)
+    const authors = log.all
+      .map((commit) => commit.author_name)
+      .filter((author): author is string => Boolean(author) && author.length > 0);
     const uniqueAuthors = new Set(authors);
     const contributors = uniqueAuthors.size;
     logger.debug('Unique contributors', { count: contributors });
