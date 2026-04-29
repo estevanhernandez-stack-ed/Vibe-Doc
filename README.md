@@ -1,3 +1,7 @@
+<p align="center">
+  <a href="https://github.com/estevanhernandez-stack-ed/vibe-plugins"><img alt="Part of Vibe Plugins — the 626Labs plugin marketplace for Claude Code" src="https://626labs.dev/assets/brand/vibe-plugins-banner-1500x500.png" /></a>
+</p>
+
 # Vibe Doc
 
 AI-powered documentation gap analyzer for modern codebases. Scan your project, identify missing technical documentation, and generate professional docs from your existing artifacts in minutes.
