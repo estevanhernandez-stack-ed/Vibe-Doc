@@ -1,8 +1,21 @@
 {
   "name": "vibe-doc",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "AI-powered documentation gap analyzer. Scans your codebase, classifies your project, identifies missing technical documentation, and generates professional docs from your existing artifacts.",
   "author": {
-    "name": "626Labs LLC"
-  }
+    "name": "626Labs LLC",
+    "url": "https://github.com/estevanhernandez-stack-ed"
+  },
+  "homepage": "https://github.com/estevanhernandez-stack-ed/Vibe-Doc#readme",
+  "repository": "https://github.com/estevanhernandez-stack-ed/Vibe-Doc",
+  "license": "MIT",
+  "keywords": [
+    "vibe-doc",
+    "documentation",
+    "doc-gap-analyzer",
+    "doc-generator",
+    "ai-documentation",
+    "claude-code-plugin",
+    "626labs"
+  ]
 }
