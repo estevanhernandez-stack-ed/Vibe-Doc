@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://github.com/estevanhernandez-stack-ed/vibe-plugins"><img alt="Part of Vibe Plugins — the 626Labs plugin marketplace for Claude Code" src="https://626labs.dev/assets/brand/vibe-plugins-banner-1500x500.png" /></a>
+  <img alt="Vibe Doc — close the documentation vacuum" src="https://626labs.dev/assets/brand/plugins/vibe-doc-banner-1500x500.png" />
 </p>
 
 # Vibe Doc
