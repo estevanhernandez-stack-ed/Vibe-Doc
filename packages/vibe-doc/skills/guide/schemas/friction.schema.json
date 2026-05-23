@@ -60,7 +60,7 @@
     "confidence": {
       "type": "string",
       "enum": ["high", "medium", "low"],
-      "description": "Logger's confidence the signal is real. /evolve weights base = high:1.0, medium:0.6, low:0.3."
+      "description": "Logger's confidence the signal is real. /evolve-doc weights base = high:1.0, medium:0.6, low:0.3."
     },
     "symptom": {
       "type": "string",
@@ -68,7 +68,7 @@
     },
     "agent_guess_at_cause": {
       "type": "string",
-      "description": "Optional hypothesis from the agent. Useful for /evolve grouping but never authoritative."
+      "description": "Optional hypothesis from the agent. Useful for /evolve-doc grouping but never authoritative."
     },
     "complement_involved": {
       "type": ["string", "null"],

@@ -172,7 +172,7 @@ It does NOT write to `~/.claude/profiles/builder.json`. That's the `update_unifi
 
 ## Why This Exists
 
-The session log is raw material for **Level 3** of the Self-Evolving Plugin Framework. `/evolve` reads these entries (alongside `friction.jsonl`) to propose plugin improvements based on observed patterns.
+The session log is raw material for **Level 3** of the Self-Evolving Plugin Framework. `/evolve-doc` reads these entries (alongside `friction.jsonl`) to propose plugin improvements based on observed patterns.
 
 The **sentinel pattern** lets `friction-logger.detect_orphans()` distinguish "user abandoned the command" from "command never ran" — abandonment is friction signal worth surfacing; non-execution isn't.
 

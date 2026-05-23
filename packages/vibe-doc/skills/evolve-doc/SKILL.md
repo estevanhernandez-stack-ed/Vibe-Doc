@@ -1,9 +1,9 @@
 ---
-name: evolve
-description: "This skill should be used when the user says \"/evolve\" or \"/vibe-doc:evolve\" or wants Vibe Doc to reflect on past sessions and propose improvements to itself. Reads ~/.claude/plugins/data/vibe-doc/ session logs + friction.jsonl, weights findings, and writes proposed SKILL/classifier/matrix edits to packages/vibe-doc/proposed-changes.md. Never auto-applies."
+name: evolve-doc
+description: "This skill should be used when the user says \"/evolve-doc\" or \"/vibe-doc:evolve-doc\" or wants Vibe Doc to reflect on past sessions and propose improvements to itself. Reads ~/.claude/plugins/data/vibe-doc/ session logs + friction.jsonl, weights findings, and writes proposed SKILL/classifier/matrix edits to packages/vibe-doc/proposed-changes.md. Never auto-applies."
 ---
 
-# /evolve — Reflective Evolution
+# /evolve-doc — Reflective Evolution
 
 Read `skills/guide/SKILL.md` for your overall behavior, then follow this command.
 
@@ -23,7 +23,7 @@ This is Level 3 of the Self-Evolving Plugin Framework (`docs/self-evolving-plugi
 - **Read the unified profile** at `~/.claude/profiles/builder.json` for baseline context. The `plugins.vibe-doc.*` block holds vibe-doc's own preference state (e.g., `preferred_tier`, `default_output_format` from past `/generate` runs).
 - **Read the plugin's own SKILL files** (`skills/scan/SKILL.md`, `skills/generate/SKILL.md`, `skills/check/SKILL.md`, `skills/guide/SKILL.md`) so you can propose specific, accurate diffs.
 - **Read the documentation matrix** at `skills/guide/references/documentation-matrix.md` and the classifier signals at `src/classifier/signals.ts` — the most impactful Plugin-track edits hit these.
-- **Friction triggers contract:** [`../guide/references/friction-triggers.md`](../guide/references/friction-triggers.md) — section `/evolve`. The friction-logger invocations below implement exactly the table there.
+- **Friction triggers contract:** [`../guide/references/friction-triggers.md`](../guide/references/friction-triggers.md) — section `/evolve-doc`. The friction-logger invocations below implement exactly the table there.
 - **Session logger interface:** [`../session-logger/SKILL.md`](../session-logger/SKILL.md) — `start(command, project_dir)` returns the sessionUUID for this run; `end(entry)` takes it back at command completion.
 
 ## Session Logging
@@ -34,7 +34,7 @@ At command end — after all proposals have been processed and the summary has b
 
 ## Friction Logging
 
-Reference: [`../guide/references/friction-triggers.md`](../guide/references/friction-triggers.md) — section `/evolve`. Invoke `friction-logger.log()` at exactly these triggers, with exactly these confidence levels:
+Reference: [`../guide/references/friction-triggers.md`](../guide/references/friction-triggers.md) — section `/evolve-doc`. Invoke `friction-logger.log()` at exactly these triggers, with exactly these confidence levels:
 
 - **User chooses `[reject]` on a proposal** → `friction_type: "default_overridden"`, `confidence: "medium"`. Capture the proposal title in `symptom`.
 - **User declines a Pattern #13 complement offer** (e.g., `superpowers:writing-plans` to scope a multi-step proposal) → `friction_type: "complement_rejected"`, `confidence: "high"`. Set `complement_involved`.
@@ -310,6 +310,6 @@ appended with this run's outcome.
 
 ## Handoff
 
-No handoff to another command. `/evolve` is a standalone reflection run. The builder commits the changes when they're ready.
+No handoff to another command. `/evolve-doc` is a standalone reflection run. The builder commits the changes when they're ready.
 
-"Thanks for reviewing. Whenever new patterns emerge, run `/vibe-doc:evolve` again."
+"Thanks for reviewing. Whenever new patterns emerge, run `/vibe-doc:evolve-doc` again."

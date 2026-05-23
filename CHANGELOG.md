@@ -7,6 +7,12 @@ All notable changes to Vibe Doc are documented here. Format follows [Keep a Chan
 
 ## [Unreleased]
 
+## [0.8.0] — 2026-05-23 — Disambiguate the evolve command
+
+### Changed
+
+- Renamed `/vibe-doc:evolve` → `/vibe-doc:evolve-doc` to disambiguate the evolve command across the plugin family. Plugin namespacing already prevented true collisions, but every sibling shipping a bare `evolve` made the short form ambiguous — the family convention going forward is `evolve-<short>`. The skill directory (`skills/evolve/` → `skills/evolve-doc/`), command file, `name:` frontmatter, friction-triggers section key, and all command-invocation references moved in lockstep. Internal logged command names and concept prose were left untouched.
+
 ## [0.7.1] — 2026-04-28 — Submission-readiness polish
 
 Patch release. Metadata-only. No behavioral change.

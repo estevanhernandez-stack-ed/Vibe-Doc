@@ -97,7 +97,7 @@
         },
         "friction_notes": {
           "type": "array",
-          "description": "Inline notes captured during the command. Friction entries are also written to friction.jsonl; this field is for human-facing recap in /evolve.",
+          "description": "Inline notes captured during the command. Friction entries are also written to friction.jsonl; this field is for human-facing recap in /evolve-doc.",
           "items": { "type": "string" }
         },
         "key_decisions": {

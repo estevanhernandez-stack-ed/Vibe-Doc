@@ -15,15 +15,15 @@ Each section covers one command. Within a section, a markdown table lists every 
 
 The seven canonical friction types: `command_abandoned`, `default_overridden`, `complement_rejected`, `repeat_question`, `artifact_rewritten`, `sequence_revised`, `rephrase_requested`.
 
-`/evolve` weighting at high/medium/low: `1.0 / 0.6 / 0.3`.
+`/evolve-doc` weighting at high/medium/low: `1.0 / 0.6 / 0.3`.
 
-**Universal trigger (applies to every command):** `command_abandoned` is never emitted directly by a command SKILL — it surfaces only via `friction-logger.detect_orphans()`, which runs at `/scan` startup as the de facto entry-point command and on demand by `/evolve`. Don't list it in per-command tables; it's accounted for once, here.
+**Universal trigger (applies to every command):** `command_abandoned` is never emitted directly by a command SKILL — it surfaces only via `friction-logger.detect_orphans()`, which runs at `/scan` startup as the de facto entry-point command and on demand by `/evolve-doc`. Don't list it in per-command tables; it's accounted for once, here.
 
 ## Universal triggers (any command)
 
 | Trigger | Friction type | Confidence | Notes |
 |---------|---------------|------------|-------|
-| Sentinel session-log entry has no terminal pair after 24h (detected by `friction-logger.detect_orphans()`) | `command_abandoned` | high | Emitted out-of-band by `/scan` startup or `/evolve`. Per-command sections do **not** call this. |
+| Sentinel session-log entry has no terminal pair after 24h (detected by `friction-logger.detect_orphans()`) | `command_abandoned` | high | Emitted out-of-band by `/scan` startup or `/evolve-doc`. Per-command sections do **not** call this. |
 | User asks the agent to re-explain or simplify a previous answer, AND the prior turn is captured in `symptom` as a quoted snippet | `repeat_question` | high | **Defensive default:** without a quoted prior in `symptom`, do not log. Better to miss than poison. |
 | User asks for a rephrase or restatement (e.g., "say that more plainly", "TLDR") with a quoted prior | `rephrase_requested` | medium | Capture the topic and the quoted prior in `symptom`. Same quoted-prior discipline as `repeat_question`. |
 
@@ -63,11 +63,11 @@ The two question-style triggers (`repeat_question`, `rephrase_requested`) apply 
 
 ---
 
-## /evolve
+## /evolve-doc
 
 | Trigger | Friction type | Confidence | Notes |
 |---------|---------------|------------|-------|
-| User rejects a proposal in `proposed-changes.md` (`[reject]` interactively or removes the entry from the queue) | `default_overridden` | medium | Capture proposal title in `symptom`. The fact that `/evolve` itself proposed the change is implicit — no `complement_involved`. |
+| User rejects a proposal in `proposed-changes.md` (`[reject]` interactively or removes the entry from the queue) | `default_overridden` | medium | Capture proposal title in `symptom`. The fact that `/evolve-doc` itself proposed the change is implicit — no `complement_involved`. |
 | User declines a Pattern #13 complement offer (e.g., `superpowers:writing-plans` to scope a multi-step proposal) | `complement_rejected` | high | Set `complement_involved`. |
 | User rewrites >50% of an accepted proposal before applying it | `artifact_rewritten` | high | Strong signal — the proposal was directionally right but executed wrong. |
 | User reorders the proposal queue significantly | `sequence_revised` | low | Queue order is a soft default. Confidence low. |
@@ -79,6 +79,6 @@ The two question-style triggers (`repeat_question`, `rephrase_requested`) apply 
 When a command SKILL grows a new condition that should produce friction:
 
 1. Add a row to that command's section above (or `Universal triggers` if it applies broadly).
-2. Pick the friction type from the canonical seven. If none fit, that's a signal the type set itself needs revisiting — open an `/evolve` proposal rather than coining a new type silently.
+2. Pick the friction type from the canonical seven. If none fit, that's a signal the type set itself needs revisiting — open an `/evolve-doc` proposal rather than coining a new type silently.
 3. Pick confidence based on signal strength: high = concrete and unambiguous (line-diff, explicit reject); medium = behavioral inference; low = could plausibly be normal exploration.
 4. Add the matching `friction-logger.log()` invocation in the command SKILL at the trigger point.
