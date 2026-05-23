@@ -55,7 +55,7 @@ Vibe Doc is a **dual-layer** plugin: the same classification engine and template
 
 **Self-Evolving Plugin Framework integration:** Vibe Doc reads `~/.claude/profiles/builder.json` (the unified builder profile) to calibrate tone and depth, writes only to its own `plugins.vibe-doc` namespace, and emits a `proposed-changes.md` from its own reflective loop. See `docs/self-evolving-plugins-framework.md` for the 12-pattern catalog.
 
-**Reflective loop (v0.7.0+):** `/vibe-doc:evolve` reads session logs at `~/.claude/plugins/data/vibe-doc/sessions/<date>.jsonl` and friction signals at `~/.claude/plugins/data/vibe-doc/friction.jsonl`, weights findings via Pattern #14 absence-of-friction inference, and appends triaged proposals as a new section in `packages/vibe-doc/proposed-changes.md`. Nothing auto-applies. The `friction-logger` and `session-logger` internal SKILLs implement Pattern #6 (Friction Log) and Level 2 (session memory) of the framework.
+**Reflective loop (v0.7.0+):** `/vibe-doc:evolve-doc` reads session logs at `~/.claude/plugins/data/vibe-doc/sessions/<date>.jsonl` and friction signals at `~/.claude/plugins/data/vibe-doc/friction.jsonl`, weights findings via Pattern #14 absence-of-friction inference, and appends triaged proposals as a new section in `packages/vibe-doc/proposed-changes.md`. Nothing auto-applies. The `friction-logger` and `session-logger` internal SKILLs implement Pattern #6 (Friction Log) and Level 2 (session memory) of the framework.
 
 ## Common tasks
 
