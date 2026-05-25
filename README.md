@@ -64,11 +64,11 @@ Four slash commands drive the conversational layer:
 The CLI mirrors the same surface for terminal and CI use:
 
 ```bash
-npx vibe-doc scan        # scan and generate a gap report
-npx vibe-doc generate    # generate missing docs
-npx vibe-doc check       # check deployment readiness
-npx vibe-doc status      # show status
-npx vibe-doc templates   # view available templates
+npx @esthernandez/vibe-doc-cli scan        # scan and generate a gap report
+npx @esthernandez/vibe-doc-cli generate    # generate missing docs
+npx @esthernandez/vibe-doc-cli check       # check deployment readiness
+npx @esthernandez/vibe-doc-cli status      # show status
+npx @esthernandez/vibe-doc-cli templates   # view available templates
 ```
 
 ## Validated on
@@ -93,7 +93,7 @@ Scanned the 626 hub.
 **npm (CLI binary for terminal / CI):**
 
 ```bash
-npm install -g @esthernandez/vibe-doc
+npm install -g @esthernandez/vibe-doc-cli
 vibe-doc --version
 ```
 
