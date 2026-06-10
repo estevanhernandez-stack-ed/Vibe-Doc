@@ -109,13 +109,13 @@ Then proceed to step 3 (Run Scan).
 Execute the scan command. **If the user chose Path A**, pass the saved profile so intake answers reach the state writer:
 
 ```bash
-cd <project-path> && npx vibe-doc scan . --profile .vibe-doc/intake-profile.json
+cd <project-path> && npx @esthernandez/vibe-doc-cli scan . --profile .vibe-doc/intake-profile.json
 ```
 
 **If the user chose Path B (cold start)**, omit `--profile`:
 
 ```bash
-cd <project-path> && npx vibe-doc scan .
+cd <project-path> && npx @esthernandez/vibe-doc-cli scan .
 ```
 
 **If scan succeeds:**

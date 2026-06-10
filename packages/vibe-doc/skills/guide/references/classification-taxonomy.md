@@ -246,7 +246,7 @@ Reference for Vibe Doc agents. Defines the 8 primary categories and 5 deployment
 
 **Examples:**
 - `@esthernandez/app-project-readiness` — spec-driven development plugin
-- `@esthernandez/vibe-doc` — documentation gap analyzer plugin
+- `@esthernandez/vibe-doc-cli` — documentation gap analyzer plugin
 - Claude Code marketplace entries
 
 **Documentation focus:**

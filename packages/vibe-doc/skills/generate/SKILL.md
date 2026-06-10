@@ -111,7 +111,7 @@ Follow these steps, in order, for each doc to generate.
 #### 3a. Run the CLI for the scaffold
 
 ```bash
-cd <project-path> && npx vibe-doc generate <docType> --format both
+cd <project-path> && npx @esthernandez/vibe-doc-cli generate <docType> --format both
 ```
 
 This produces `docs/generated/<docType>.md` with deterministic-extractor fields pre-filled and `NEEDS INPUT` comments marking the gaps.
@@ -227,7 +227,7 @@ confidently synthesize from source files, and leave NEEDS INPUT comments for
 anything you can't.
 
 Steps:
-1. Run: `cd <project-path> && npx vibe-doc generate <docType> --format both`
+1. Run: `cd <project-path> && npx @esthernandez/vibe-doc-cli generate <docType> --format both`
 2. Read the generated scaffold at docs/generated/<docType>.md
 3. Read these source files: <from the hint table, plus inventory-specific adds>
 4. For each NEEDS INPUT section in the scaffold:

@@ -182,7 +182,7 @@ For each of the 7 document types, defines:
 ### Scan Skill
 1. Read `classification-taxonomy.md` to resolve ambiguous classifications
 2. Consult `documentation-matrix.md` to map category + contexts → doc type tiers
-3. Run `npx vibe-doc scan` via CLI
+3. Run `npx @esthernandez/vibe-doc-cli scan` via CLI
 4. Present classification and gaps to user
 5. Offer interactive walkthrough (one gap at a time)
 
@@ -192,11 +192,11 @@ For each of the 7 document types, defines:
 3. Let user select gaps
 4. For each gap, consult `breadcrumb-heuristics.md` to get synthesis questions
 5. Ask those questions, save answers
-6. Run `npx vibe-doc generate <docType> --format both --answers <answers.json>`
+6. Run `npx @esthernandez/vibe-doc-cli generate <docType> --format both --answers <answers.json>`
 7. Present generated doc with confidence per section
 
 ### Check Skill
-1. Run `npx vibe-doc check`
+1. Run `npx @esthernandez/vibe-doc-cli check`
 2. Show pass/fail status (exit code 0/1)
 3. If fail: consult `documentation-matrix.md` to explain which Required docs are missing
 4. Suggest regeneration or review

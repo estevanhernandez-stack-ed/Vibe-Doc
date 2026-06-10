@@ -39,7 +39,7 @@ Claude Desktop reads `.claude-plugin/marketplace.json` at the repo root and load
 The only path that gives you both the Claude Code plugin surface **and** a standalone `vibe-doc` binary you can run from any terminal.
 
 ```bash
-npm install -g @esthernandez/vibe-doc
+npm install -g @esthernandez/vibe-doc-cli
 vibe-doc --version
 # 0.3.0
 ```
@@ -87,7 +87,7 @@ You can also download a pre-built `.plugin` file from the [GitHub releases page]
 ```bash
 /scan
 # or via CLI:
-npx vibe-doc scan
+npx @esthernandez/vibe-doc-cli scan
 ```
 
 Vibe Doc examines your codebase, classifies your architecture, and generates a gap report showing which docs are missing and their priority.
@@ -104,7 +104,7 @@ The gap report categorizes findings by three tiers:
 ```bash
 /generate
 # or via CLI:
-npx vibe-doc generate
+npx @esthernandez/vibe-doc-cli generate
 ```
 
 Select which gaps to fill, review the generated docs, and refine them in conversation. Export to your repository.
@@ -134,19 +134,19 @@ Validates that your documentation meets deployment requirements. Ensures all Req
 
 ```bash
 # Scan your project
-npx vibe-doc scan
+npx @esthernandez/vibe-doc-cli scan
 
 # Generate documentation
-npx vibe-doc generate
+npx @esthernandez/vibe-doc-cli generate
 
 # Check deployment readiness
-npx vibe-doc check
+npx @esthernandez/vibe-doc-cli check
 
 # Show status
-npx vibe-doc status
+npx @esthernandez/vibe-doc-cli status
 
 # View available templates
-npx vibe-doc templates
+npx @esthernandez/vibe-doc-cli templates
 ```
 
 ## Document Types (v1 Standard)

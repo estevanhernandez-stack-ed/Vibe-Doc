@@ -109,7 +109,7 @@ All Vibe Doc skills operate on a persistent project state file: `.vibe-doc/state
 Each skill runs Vibe Doc commands via bash. Standard pattern:
 
 ```bash
-cd <project-path> && npx vibe-doc <command> [options]
+cd <project-path> && npx @esthernandez/vibe-doc-cli <command> [options]
 ```
 
 **Available commands:**
@@ -125,7 +125,7 @@ cd <project-path> && npx vibe-doc <command> [options]
 
 ```bash
 # 1. Run scan and capture output
-OUTPUT=$(cd /path/to/project && npx vibe-doc scan . 2>&1)
+OUTPUT=$(cd /path/to/project && npx @esthernandez/vibe-doc-cli scan . 2>&1)
 if [ $? -ne 0 ]; then
   echo "Scan failed: $OUTPUT"
   # Handle error, suggest next steps
@@ -205,7 +205,7 @@ Does this match your project? [yes/no/revise]
 **Code blocks:** Use triple backticks with language hint:
 
 ```bash
-cd /path/to/project && npx vibe-doc check
+cd /path/to/project && npx @esthernandez/vibe-doc-cli check
 ```
 
 ```json
@@ -285,7 +285,7 @@ When in doubt, **don't** announce. Only surface a complement when you can articu
 ### When NOT to defer
 
 - **The classifier and gap analyzer.** These are Vibe Doc's load-bearing logic. Don't defer the *classification decision* to a complement — Vibe Doc owns that. Complements only enrich the *content* of generated docs.
-- **The deterministic CLI scaffold.** `npx vibe-doc generate <type>` produces a known, versioned scaffold. Complements operate *after* the scaffold exists, filling sections — they don't replace the scaffold step.
+- **The deterministic CLI scaffold.** `npx @esthernandez/vibe-doc-cli generate <type>` produces a known, versioned scaffold. Complements operate *after* the scaffold exists, filling sections — they don't replace the scaffold step.
 - **The "never fabricate" rule.** Even if a complement could plausibly hallucinate something useful, Vibe Doc still requires evidence-based filling with inline source citations. NEEDS INPUT beats confident-but-unsourced content from any complement.
 - **State writes.** `.vibe-doc/state.json` is Vibe Doc's data contract. Complements don't write to it.
 - **Profile writes to `plugins.vibe-doc`.** Vibe Doc's own namespace in the unified profile. Complements don't touch it.
@@ -294,7 +294,7 @@ When in doubt, **don't** announce. Only surface a complement when you can articu
 
 ### Workflow: Scan → Classify → Gap Report
 
-1. Run `npx vibe-doc scan <path>`
+1. Run `npx @esthernandez/vibe-doc-cli scan <path>`
 2. Read `.vibe-doc/state.json` to get scan results
 3. Present classification to user; ask for confirmation
 4. Parse gaps from state; present summary
@@ -304,13 +304,13 @@ When in doubt, **don't** announce. Only surface a complement when you can articu
 
 1. Ask 2-3 synthesis questions (from breadcrumb heuristics)
 2. Save answers to temporary JSON
-3. Run `npx vibe-doc generate <docType> --format both --answers <answers.json>`
+3. Run `npx @esthernandez/vibe-doc-cli generate <docType> --format both --answers <answers.json>`
 4. Read output; show file paths and confidence summary
 5. Ask if user wants to generate more docs or finish
 
 ### Workflow: Check → Fail → Suggest
 
-1. Run `npx vibe-doc check <path>`
+1. Run `npx @esthernandez/vibe-doc-cli check <path>`
 2. If pass: celebrate, offer next steps
 3. If fail: parse missing/stale docs; suggest running generate skill
 4. Show CI integration command

@@ -48,7 +48,7 @@ User: "Scan my project for documentation gaps"
 4. **If Path B (Cold start):**
    - Jump to section 3 (Run Scan)
 5. **Section 3 — Run Scan:**
-   - Execute: `cd <project-path> && npx vibe-doc scan .`
+   - Execute: `cd <project-path> && npx @esthernandez/vibe-doc-cli scan .`
    - If fails: show error, suggest next steps, exit
    - If succeeds: proceed
 6. **Section 4 — Present Classification:**
@@ -86,7 +86,7 @@ User: "Help me generate the missing documentation"
      - Extract the "Gap Questions" section
      - Ask user those 2-3 questions
      - Save answers to temporary JSON
-     - Execute: `cd <project-path> && npx vibe-doc generate <docType> --format both --answers '<json>'`
+     - Execute: `cd <project-path> && npx @esthernandez/vibe-doc-cli generate <docType> --format both --answers '<json>'`
      - Parse output: show file paths, confidence per section
      - Checkpoint: approve/revise/skip
 5. **Section 7 — Completion:**
@@ -101,7 +101,7 @@ User: "Check if my documentation is current"
 
 1. **Read** `skills/check/SKILL.md`
 2. **Section 1 — Run Check:**
-   - Execute: `cd <project-path> && npx vibe-doc check .`
+   - Execute: `cd <project-path> && npx @esthernandez/vibe-doc-cli check .`
 3. **Section 2 — Present Results:**
    - If pass: celebrate, show status, offer next steps
    - If fail: show what's missing/stale, suggest fixes
@@ -145,13 +145,13 @@ All skills operate on `.vibe-doc/state.json` in the mounted project folder.
 
 ```bash
 # Scan produces/updates:
-npx vibe-doc scan <path>
+npx @esthernandez/vibe-doc-cli scan <path>
 
 # Generate updates:
-npx vibe-doc generate <docType> --format both --answers <json>
+npx @esthernandez/vibe-doc-cli generate <docType> --format both --answers <json>
 
 # Check reads (no modifications):
-npx vibe-doc check <path>
+npx @esthernandez/vibe-doc-cli check <path>
 ```
 
 **State structure** (from `guide/SKILL.md`):
@@ -223,7 +223,7 @@ From `guide/SKILL.md`:
 
 **Code blocks:**
 ```bash
-cd /project && npx vibe-doc scan .
+cd /project && npx @esthernandez/vibe-doc-cli scan .
 ```
 
 **Checkpoints:** Use clear formatting with options in brackets:

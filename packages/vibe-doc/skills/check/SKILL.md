@@ -22,7 +22,7 @@ Simple CI-safe validation: verify that Required documentation exists and is curr
 Execute the validation:
 
 ```bash
-cd <project-path> && npx vibe-doc check .
+cd <project-path> && npx @esthernandez/vibe-doc-cli check .
 ```
 
 ---
@@ -152,7 +152,7 @@ GitHub Actions example:
           with:
             node-version: '20'
         - run: npm install -g vibe-doc
-        - run: npx vibe-doc check .
+        - run: npx @esthernandez/vibe-doc-cli check .
           # Command exits with:
           #   0 = all Required docs exist and current
           #   1 = missing or stale Required docs
@@ -162,7 +162,7 @@ Other CI systems (GitLab CI, CircleCI, Jenkins):
 
 ```bash
 # Run this command in your pipeline
-npx vibe-doc check .
+npx @esthernandez/vibe-doc-cli check .
 
 # Exit codes:
 #   0 = PASS (deploy allowed)
@@ -184,7 +184,7 @@ The `check` command returns standard exit codes:
 
 ```yaml
 # GitHub Actions
-- run: npx vibe-doc check .
+- run: npx @esthernandez/vibe-doc-cli check .
   continue-on-error: true  # Optional: allow preview deployments on fail
   
 - name: Report Status
@@ -273,14 +273,14 @@ The doc may be outdated, but I'm not 100% certain.
 
 **Developer before local deployment:**
 ```
-npx vibe-doc check .
+npx @esthernandez/vibe-doc-cli check .
 # → Verify docs are current before deploying to staging
 ```
 
 **CI pipeline (on every push):**
 ```
 # Block merge if Required docs are missing
-if ! npx vibe-doc check .; then
+if ! npx @esthernandez/vibe-doc-cli check .; then
   exit 1
 fi
 ```
@@ -288,7 +288,7 @@ fi
 **CI pipeline (allow preview on fail):**
 ```
 # Allow preview deployments, but warn on missing docs
-npx vibe-doc check . || true
+npx @esthernandez/vibe-doc-cli check . || true
 ```
 
 **Scheduled check (weekly reminder):**
