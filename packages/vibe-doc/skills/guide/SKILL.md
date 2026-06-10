@@ -230,6 +230,12 @@ When generating documents, always include source attributions:
 Based on your deployment discussion in CLAUDE.md and CI config analysis...
 ```
 
+### Model Tiering
+
+Model tiering: this plugin annotates dispatch sites with tiers per the family RFC (vibe-plugins `docs/conventions/model-tiering-rfc.md`). The session maps tiers to models; when no cheaper tier is available, all tiers run on the session model — annotations are routing hints, never requirements.
+
+The only dispatch site today is the multi-doc parallel fill in `skills/generate/SKILL.md` (Section 4), tagged `bulk`; the synthesis and interview beats stay with the session as `judgment`.
+
 ## Ecosystem-Aware Composition
 
 Vibe Doc lives in a richer environment than its own skills. The builder may have other plugins, MCPs, or skills installed that overlap with Vibe Doc's phases. **Don't reinvent capabilities the user already has — defer to the specialist when one is present.**

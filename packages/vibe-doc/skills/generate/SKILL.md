@@ -210,6 +210,8 @@ Open: docs/generated/<docType>.md
 
 When the user selects multiple docs, **dispatch one subagent per doc type in parallel** using the Task tool. This is the recommended path — it's faster and each agent gets a focused slice of the codebase to read.
 
+**Dispatch tier:** `bulk` — each subagent drafts one doc type from the scaffold plus the source files it reads (volume execution from a tight spec). The synthesis and interview beats (Section 4d) stay with the orchestrating session — that's `judgment`, where the deliverable is the question to ask the user, not the draft.
+
 #### 4a. Plan the dispatch
 
 For each selected doc, build a subagent prompt that covers Section 3a-c (scaffold + read sources + fill autonomously). Do **not** include the conversational interview (Section 3d) in the subagent prompt — that happens in the main agent after all subagents return, so questions don't interleave.
