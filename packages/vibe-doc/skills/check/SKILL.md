@@ -151,7 +151,7 @@ GitHub Actions example:
         - uses: actions/setup-node@v4
           with:
             node-version: '20'
-        - run: npm install -g vibe-doc
+        - run: npm install -g @esthernandez/vibe-doc-cli
         - run: npx @esthernandez/vibe-doc-cli check .
           # Command exits with:
           #   0 = all Required docs exist and current
