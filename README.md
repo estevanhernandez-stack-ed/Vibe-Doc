@@ -1,3 +1,5 @@
+<p align="center"><img src="assets/brand/icon.svg" width="120" alt="vibe-doc mark"></p>
+
 <p align="center">
   <img alt="Vibe Doc — close the documentation vacuum" src="https://626labs.dev/assets/brand/plugins/vibe-doc-banner-1500x500.png" />
 </p>
