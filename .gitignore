@@ -3,3 +3,4 @@ dist/
 *.tgz
 .vibe-doc/
 *.log
+.gitnexus
